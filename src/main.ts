@@ -1,4 +1,5 @@
 import { Renderer } from './engine/Renderer';
+import { GameLoop } from './engine/GameLoop';
 
 // Define the audit interface for the global window object
 declare global {
@@ -18,6 +19,13 @@ async function bootstrap() {
   const renderer = new Renderer();
   await renderer.init(appContainer);
 
+  const gameLoop = new GameLoop();
+
+  // Setup the game loop with a dummy update for now until Phase 5
+  gameLoop.start((_dt: number) => {
+    // Entities and Kinematics will hook in here in the future
+  });
+
   // Setup the Effortless Audit Toolkit
   window.audit = {
     getRendererDimensions: () => {
@@ -28,6 +36,9 @@ async function bootstrap() {
         };
       }
       return null;
+    },
+    getFPS: () => {
+      return gameLoop.getFPS();
     }
   };
 

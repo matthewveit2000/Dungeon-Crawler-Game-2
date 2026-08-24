@@ -23,6 +23,7 @@
   "homepage": "https://github.com/matthewveit2000/Dungeon-Crawler-Game-2#readme",
   "devDependencies": {
     "@vitest/ui": "^4.1.11",
+    "canvas": "^3.2.3",
     "jsdom": "^29.1.1",
     "typescript": "^7.0.2",
     "vite": "^8.2.2",

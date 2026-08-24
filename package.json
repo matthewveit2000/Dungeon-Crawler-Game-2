@@ -1,0 +1,34 @@
+{
+  "name": "app",
+  "version": "1.0.0",
+  "description": "Welcome to the Dungeon Crawler Engine, a high-performance, top-down 2D roguelike game built for the web. This project utilizes TypeScript, Vite, and the PixiJS WebGL rendering engine to deliver a highly scalable, procedurally generated action-RPG experience.",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "test": "vitest",
+    "test:ui": "vitest --ui"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/matthewveit2000/Dungeon-Crawler-Game-2.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/matthewveit2000/Dungeon-Crawler-Game-2/issues"
+  },
+  "homepage": "https://github.com/matthewveit2000/Dungeon-Crawler-Game-2#readme",
+  "devDependencies": {
+    "@vitest/ui": "^4.1.11",
+    "jsdom": "^29.1.1",
+    "typescript": "^7.0.2",
+    "vite": "^8.2.2",
+    "vitest": "^4.1.11"
+  },
+  "dependencies": {
+    "pixi.js": "^8.20.0"
+  }
+}

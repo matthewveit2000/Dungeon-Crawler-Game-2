@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { Player } from './Player';
 import { InputManager } from '../engine/InputManager';
 import { Application } from 'pixi.js';
@@ -20,7 +20,7 @@ describe('Player', () => {
 
   afterEach(() => {
     inputManager.destroy();
-    app.destroy(true, { children: true, texture: true, baseTexture: true });
+    app.destroy(true, { children: true, texture: true });
   });
 
   it('initializes with correct properties', () => {

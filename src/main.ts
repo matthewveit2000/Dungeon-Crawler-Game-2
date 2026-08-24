@@ -1,6 +1,8 @@
 import { Renderer } from './engine/Renderer';
 import { GameLoop } from './engine/GameLoop';
 import { InputManager } from './engine/InputManager';
+import { EntityManager } from './engine/EntityManager';
+import { TestSquare } from './modules/TestSquare';
 
 // Define the audit interface for the global window object
 declare global {
@@ -23,8 +25,14 @@ async function bootstrap() {
   const gameLoop = new GameLoop();
   const inputManager = new InputManager();
 
-  // Setup the game loop with a dummy update for now until Phase 5
-  gameLoop.start((_dt: number) => {
+  // Phase 5: Initialize EntityManager with the stage
+  const entityManager = new EntityManager(renderer.app.stage);
+
+  // Setup the game loop
+  gameLoop.start((dt: number) => {
+    // Phase 5: Update all active entities
+    entityManager.update(dt);
+
     // Entities and Kinematics will hook in here in the future
     if (window.audit && window.audit.logInputs) {
       console.log('Input State:', inputManager.getState());
@@ -34,6 +42,11 @@ async function bootstrap() {
   // Setup the Effortless Audit Toolkit
   window.audit = {
     logInputs: false,
+    spawnTestSquare: () => {
+      const square = new TestSquare('test-square-1', 200, 200);
+      entityManager.addEntity(square);
+      console.log('TestSquare spawned via EntityManager.');
+    },
     getRendererDimensions: () => {
       if (renderer && renderer.app && renderer.app.renderer) {
         return {

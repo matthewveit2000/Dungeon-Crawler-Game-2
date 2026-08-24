@@ -3,6 +3,7 @@ import { GameLoop } from './engine/GameLoop';
 import { InputManager } from './engine/InputManager';
 import { EntityManager } from './engine/EntityManager';
 import { TestSquare } from './modules/TestSquare';
+import { Player } from './modules/Player';
 
 // Define the audit interface for the global window object
 declare global {
@@ -46,6 +47,11 @@ async function bootstrap() {
       const square = new TestSquare('test-square-1', 200, 200);
       entityManager.addEntity(square);
       console.log('TestSquare spawned via EntityManager.');
+    },
+    spawnPlayer: () => {
+      const player = new Player('player-1', 400, 300, inputManager);
+      entityManager.addEntity(player);
+      console.log('Player spawned via EntityManager at (400, 300). Use WASD to move.');
     },
     getRendererDimensions: () => {
       if (renderer && renderer.app && renderer.app.renderer) {

@@ -45,6 +45,8 @@ export class GameLoop {
   private currentFps = 0;
   private errorCount = 0;
 
+  public isMenuOpen = false;
+
   constructor(options: GameLoopOptions = {}) {
     this.fixedStep = options.fixedStep ?? DEFAULT_FIXED_STEP;
     this.maxFrameTime = options.maxFrameTime ?? DEFAULT_MAX_FRAME_TIME;
@@ -98,19 +100,23 @@ export class GameLoop {
     const frameTime = Math.min((time - this.lastTime) / 1000, this.maxFrameTime);
     this.lastTime = time;
 
-    // Negative deltas are possible if a clock is adjusted mid-frame.
-    this.accumulator += Math.max(0, frameTime);
-
-    let steps = 0;
-    while (this.accumulator >= this.fixedStep && steps < this.maxStepsPerFrame) {
-      this.updateCallback?.(this.fixedStep);
-      this.accumulator -= this.fixedStep;
-      steps++;
-    }
-
-    // The machine could not keep up: drop the backlog rather than let it grow.
-    if (steps === this.maxStepsPerFrame) {
+    if (this.isMenuOpen) {
       this.accumulator = 0;
+    } else {
+      // Negative deltas are possible if a clock is adjusted mid-frame.
+      this.accumulator += Math.max(0, frameTime);
+
+      let steps = 0;
+      while (this.accumulator >= this.fixedStep && steps < this.maxStepsPerFrame) {
+        this.updateCallback?.(this.fixedStep);
+        this.accumulator -= this.fixedStep;
+        steps++;
+      }
+
+      // The machine could not keep up: drop the backlog rather than let it grow.
+      if (steps === this.maxStepsPerFrame) {
+        this.accumulator = 0;
+      }
     }
 
     this.frameCount++;

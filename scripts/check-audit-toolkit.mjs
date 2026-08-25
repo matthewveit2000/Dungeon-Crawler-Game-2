@@ -24,6 +24,7 @@ const REQUIRED_COMMANDS = [
   'setSeed',
   'getFloorStats',
   'setTimer',
+  'toggleMenu',
 ];
 
 const DIST = 'dist/assets';

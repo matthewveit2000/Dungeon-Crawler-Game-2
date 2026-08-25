@@ -6,9 +6,16 @@
  */
 export class Timer {
   private seconds: number;
+  private onZeroCallback?: () => void;
+  private hasFiredZero = false;
 
   constructor(initialSeconds = 300) {
     this.seconds = initialSeconds;
+  }
+
+  /** Registers a callback to be fired exactly once when the timer hits zero. */
+  public setOnZeroCallback(callback: () => void): void {
+    this.onZeroCallback = callback;
   }
 
   public get remainingSeconds(): number {
@@ -22,12 +29,23 @@ export class Timer {
   public update(dt: number): void {
     if (this.seconds > 0) {
       this.seconds = Math.max(0, this.seconds - dt);
+      this.checkZero();
     }
   }
 
   /** Allows the PM to override the timer (e.g. for instant death tests). */
   public setTime(seconds: number): void {
     this.seconds = Math.max(0, seconds);
+    this.checkZero();
+  }
+
+  private checkZero(): void {
+    if (this.seconds === 0 && !this.hasFiredZero) {
+      this.hasFiredZero = true;
+      if (this.onZeroCallback) {
+        this.onZeroCallback();
+      }
+    }
   }
 
   /** Formats the remaining time as M:SS. */

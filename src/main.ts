@@ -12,6 +12,7 @@ import { FloorManager } from './modules/FloorManager';
 import { TestSquare } from './modules/TestSquare';
 import { Timer } from './modules/Timer';
 import { TimerOverlay } from './engine/TimerOverlay';
+import { GameOverOverlay } from './engine/GameOverOverlay';
 import world from './packs/World.json';
 
 /** Console helpers the PM uses to verify each phase by hand. */
@@ -79,6 +80,12 @@ async function bootstrap(): Promise<void> {
   const timerOverlay = new TimerOverlay({ screenWidth: renderer.screenWidth });
   renderer.ui.addChild(timerOverlay.view);
 
+  const gameOverOverlay = new GameOverOverlay({
+    screenWidth: renderer.screenWidth,
+    screenHeight: renderer.screenHeight,
+  });
+  renderer.ui.addChild(gameOverOverlay.view);
+
   const level = new Level();
   const floors = new FloorManager(level, entityManager, inputManager, (built) => {
     tileRenderer.render(built.grid);
@@ -94,9 +101,19 @@ async function bootstrap(): Promise<void> {
   window.addEventListener('resize', () => {
     camera.resize(renderer.screenWidth, renderer.screenHeight);
     timerOverlay.resize(renderer.screenWidth);
+    gameOverOverlay.resize(renderer.screenWidth, renderer.screenHeight);
     if (overlay.isVisible) {
       overlay.show(level.grid, renderer.screenWidth, renderer.screenHeight);
     }
+  });
+
+  timer.setOnZeroCallback(() => {
+    const player = floors.getPlayer();
+    if (player) {
+      player.die();
+    }
+    gameLoop.stop();
+    gameOverOverlay.show();
   });
 
   gameLoop.start((dt) => {

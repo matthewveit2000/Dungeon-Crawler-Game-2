@@ -1,102 +1,138 @@
-import { Graphics } from 'pixi.js';
 import { Entity } from '../engine/Entity';
 import { InputManager } from '../engine/InputManager';
+import { parseColor } from '../engine/View';
 import { Level } from './Level';
+import { resolveMovement } from './Movement';
+import playerPack from '../packs/Player.json';
+import controls from '../packs/Controls.json';
 
+export interface PlayerOptions {
+  level?: Level;
+  /** Overrides the size derived from the level's tile size. */
+  size?: number;
+  speed?: number;
+}
+
+/** Size fallback for a player created without a level to scale against. */
+const FALLBACK_TILE_SIZE = 40;
+
+/**
+ * Player — the character the player drives.
+ *
+ * Tier 2. Reads its stats from the Tier 3 player pack and its keys from the
+ * controls pack, then asks the shared movement resolver to carry it through the
+ * level. It holds no rendering code of its own.
+ */
 export class Player extends Entity {
-  private graphics: Graphics;
-  private inputManager: InputManager;
-  public speed: number = 200; // pixels per second
-  private level?: Level;
+  public readonly speed: number;
+
+  private readonly inputManager: InputManager;
+  private readonly level?: Level;
+  private readonly interactRadius: number;
+  private readonly maxStep: number;
+
   private staircase?: Entity;
   private onInteract?: () => void;
-  private wasInteractPressed: boolean = false;
 
-  constructor(id: string, x: number, y: number, inputManager: InputManager, level?: Level) {
-    super(id, x, y);
-    this.level = level;
-    this.width = 10;
-    this.height = 10;
+  constructor(
+    id: string,
+    x: number,
+    y: number,
+    inputManager: InputManager,
+    options: PlayerOptions = {},
+  ) {
+    const tileSize = options.level?.tileSize ?? FALLBACK_TILE_SIZE;
+    const size = options.size ?? Math.round(tileSize * playerPack.sizeRatio);
+
+    super(id, x, y, { width: size, height: size, color: parseColor(playerPack.color) });
+
     this.inputManager = inputManager;
+    this.level = options.level;
+    this.speed = options.speed ?? playerPack.speed;
+    this.interactRadius = playerPack.interactRadius;
 
-    this.graphics = new Graphics();
-    this.graphics.rect(0, 0, this.width, this.height);
-    this.graphics.fill(0x00ff00); // Green for player
-
-    this.sprite.addChild(this.graphics);
-    // Center the sprite's anchor so rotation/positioning works well
-    this.sprite.pivot.x = this.width / 2;
-    this.sprite.pivot.y = this.height / 2;
-
-    // Set initial position
-    this.sprite.x = this.x;
-    this.sprite.y = this.y;
+    // Never advance more than half a tile between collision tests, so no amount
+    // of movement in one step can skip over a wall.
+    this.maxStep = tileSize / 2;
   }
 
   public setStaircase(staircase: Entity): void {
     this.staircase = staircase;
   }
 
-  public setInteractionCallback(cb: () => void): void {
-    this.onInteract = cb;
+  public setInteractionCallback(callback: () => void): void {
+    this.onInteract = callback;
   }
 
-  update(dt: number): void {
-    const inputState = this.inputManager.getState();
-    const keys = inputState.keys;
+  public update(dt: number): void {
+    const state = this.inputManager.getState();
 
-    const isInteractPressed = keys['e'] === true;
+    this.handleInteraction(state.justPressed);
+    this.handleMovement(state.keys, dt);
 
-    if (isInteractPressed && !this.wasInteractPressed) {
-      this.wasInteractPressed = true;
-      if (this.staircase && this.onInteract) {
-        const dx = this.x - this.staircase.x;
-        const dy = this.y - this.staircase.y;
-        const distance = Math.sqrt(dx * dx + dy * dy);
+    // Unconditional, so external repositioning (descending, teleports) is
+    // reflected without every caller having to move the sprite by hand.
+    this.syncView();
+  }
 
-        if (distance < 60) {
-          this.onInteract();
-        }
-      }
-    } else if (!isInteractPressed) {
-      this.wasInteractPressed = false;
+  /**
+   * Reads the edge state rather than the held state, so holding the key cannot
+   * fire repeatedly and a tap shorter than one frame is not lost.
+   */
+  private handleInteraction(justPressed: Record<string, boolean>): void {
+    if (!isActionPressed(justPressed, controls.interact)) return;
+    if (!this.staircase || !this.onInteract) return;
+
+    const dx = this.x - this.staircase.x;
+    const dy = this.y - this.staircase.y;
+
+    if (Math.hypot(dx, dy) < this.interactRadius) {
+      this.onInteract();
     }
+  }
 
-
+  private handleMovement(keys: Record<string, boolean>, dt: number): void {
     let dx = 0;
     let dy = 0;
 
-    if (keys['w']) dy -= 1;
-    if (keys['s']) dy += 1;
-    if (keys['a']) dx -= 1;
-    if (keys['d']) dx += 1;
+    if (isActionPressed(keys, controls.moveUp)) dy -= 1;
+    if (isActionPressed(keys, controls.moveDown)) dy += 1;
+    if (isActionPressed(keys, controls.moveLeft)) dx -= 1;
+    if (isActionPressed(keys, controls.moveRight)) dx += 1;
 
-    if (dx !== 0 || dy !== 0) {
-      // Normalize vector for diagonal movement
-      const length = Math.sqrt(dx * dx + dy * dy);
-      dx /= length;
-      dy /= length;
+    if (dx === 0 && dy === 0) return;
 
-      let nextX = this.x + dx * this.speed * dt;
-      let nextY = this.y + dy * this.speed * dt;
+    // Normalised, so travelling diagonally is no faster than travelling straight.
+    const length = Math.hypot(dx, dy);
+    const delta = {
+      x: (dx / length) * this.speed * dt,
+      y: (dy / length) * this.speed * dt,
+    };
 
-      // Check collision on X axis
-      if (this.level && this.level.isCollidingWithWall(nextX, this.y, this.width, this.height)) {
-        nextX = this.x; // Block movement on X
-      }
-
-      // Check collision on Y axis
-      if (this.level && this.level.isCollidingWithWall(this.x, nextY, this.width, this.height)) {
-        nextY = this.y; // Block movement on Y
-      }
-
-      // Update logical position
-      this.x = nextX;
-      this.y = nextY;
-
-      // Update visual position
-      this.sprite.x = this.x;
-      this.sprite.y = this.y;
+    if (!this.level) {
+      this.x += delta.x;
+      this.y += delta.y;
+      return;
     }
+
+    const level = this.level;
+    const next = resolveMovement(
+      (x, y, width, height) => level.isCollidingWithWall(x, y, width, height),
+      {
+        from: { x: this.x, y: this.y },
+        delta,
+        width: this.width,
+        height: this.height,
+        maxStep: this.maxStep,
+      },
+    );
+
+    this.x = next.x;
+    this.y = next.y;
   }
+}
+
+/** True when any key bound to an action is currently held. */
+function isActionPressed(keys: Record<string, boolean>, bindings: string[]): boolean {
+  return bindings.some((key) => keys[key] === true);
 }

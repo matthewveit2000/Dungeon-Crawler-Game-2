@@ -9,15 +9,21 @@ Your goal is simple: level up, acquire gear strong enough to keep you alive, and
 - **The Global Timer:** Every floor features a strict 5-minute time limit. There are no extensions.
 - **Zero-Second Permadeath:** If the clock strikes exactly 0:00, your run is over. You die instantly. Death is permanent; there is no progression carryover between runs.
 - **Pausing:** The timer and all enemies stop *only* when you have a menu open (Inventory, Skills, Stats). Use this time to catch your breath, analyze your loot, and plan your build.
-- **The Stairs:** You must find the staircase within the massive 5-minute window. Descending resets the timer to 5 minutes, but the enemies on the next floor will be significantly stronger.
+- **The Stairs:** You must find the staircase within the massive 5-minute window. It is always placed at the furthest reachable point on the floor from where you start, so descending is never a short walk. Descending resets the timer to 5 minutes, but the enemies on the next floor will be significantly stronger.
+
+*(The timer itself arrives in Epic 4. Today you can explore floors and descend as often as you like, with no clock running.)*
 
 ## 2. Controls & Interactions
 
-- **WASD / Arrow Keys:** Move character.
-- **Left Mouse Button / Spacebar:** Attack / Fire Weapon.
-- **E:** Interact (Loot items from the floor, talk to vendors, use stairs).
-- **I:** Open Inventory (Pauses game).
-- **C:** Open Character Stats & Skills (Pauses game).
+| Control | Action | Status |
+|---|---|---|
+| **WASD / Arrow Keys** | Move character | Available now |
+| **E** | Interact — use the stairs to descend | Available now |
+| **Left Mouse Button / Spacebar** | Attack / fire weapon | Coming in Epic 5 |
+| **I** | Open Inventory (pauses the game) | Coming in Epic 6 |
+| **C** | Open Character Stats & Skills (pauses the game) | Coming in Epic 9 |
+
+Controls are defined in `src/packs/Controls.json` and can be rebound there. The "Status" column is not decoration: this guide describes the game as it will be, and marking what is playable today keeps it from promising things the build cannot do.
 
 ## 3. Combat Archetypes
 

@@ -20,5 +20,5 @@ Since this phase is purely backend data architecture, there are no visual change
 
 1. Ensure you have the repository pulled down.
 2. Open your terminal.
-3. Run `npm run test`
+3. Run `npm test`
 4. Verify that all tests, especially those for `MapGrid`, pass perfectly.

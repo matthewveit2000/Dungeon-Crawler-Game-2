@@ -1,0 +1,7 @@
+{
+  "moveUp": ["w", "arrowup"],
+  "moveDown": ["s", "arrowdown"],
+  "moveLeft": ["a", "arrowleft"],
+  "moveRight": ["d", "arrowright"],
+  "interact": ["e"]
+}

@@ -1,13 +1,21 @@
 {
-  "name": "app",
+  "name": "dungeon-crawler-engine",
   "version": "1.0.0",
-  "description": "Welcome to the Dungeon Crawler Engine, a high-performance, top-down 2D roguelike game built for the web. This project utilizes TypeScript, Vite, and the PixiJS WebGL rendering engine to deliver a highly scalable, procedurally generated action-RPG experience.",
-  "main": "index.js",
+  "description": "A top-down 2D dungeon crawler roguelike for the browser, built with TypeScript, Vite and PixiJS.",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "test": "vitest",
-    "test:ui": "vitest --ui"
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "verify": "npm run format:check && npm run typecheck && npm run test && npm run build && npm run check:architecture && node scripts/check-audit-toolkit.mjs",
+    "check:architecture": "node scripts/check-architecture.mjs",
+    "check:audit": "npm run build && node scripts/check-audit-toolkit.mjs"
   },
   "repository": {
     "type": "git",
@@ -22,9 +30,11 @@
   },
   "homepage": "https://github.com/matthewveit2000/Dungeon-Crawler-Game-2#readme",
   "devDependencies": {
+    "@vitest/coverage-v8": "^4.1.11",
     "@vitest/ui": "^4.1.11",
     "canvas": "^3.2.3",
     "jsdom": "^29.1.1",
+    "prettier": "^3.9.6",
     "typescript": "^7.0.2",
     "vite": "^8.2.2",
     "vitest": "^4.1.11"

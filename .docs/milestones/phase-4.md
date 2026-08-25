@@ -1,21 +1,36 @@
-# Phase 4: Input State Manager
+# Milestone: EPIC 1: Engine Foundation and Application Boot / Phase 4: Input State Manager
 
-## Summary
-The game engine can now track the player's keyboard and mouse inputs in real-time. This system listens for when keys (like WASD) are pressed down or released, and it continuously monitors the mouse's position and button clicks. This is a crucial foundational step that will allow players to control their character and interact with the game world in upcoming phases.
+> Reformatted during the Phase 11.5 Hardening Checkpoint to match `TEMPLATE.md`, and updated to cover the edge-state tracking added in that phase.
 
-## Technical Decisions
-- A standalone `InputManager` class was created within the Tier 1 (Engine) layer to strictly handle browser events for the keyboard and mouse.
-- Input states (active keys, mouse coordinates, and mouse button presses) are stored in an easily accessible state object, updated via standard browser event listeners (`keydown`, `keyup`, `mousemove`, `mousedown`, `mouseup`).
-- The native browser context menu (right-click menu) was disabled to allow the right mouse button to be used seamlessly in-game without interruptions.
+## 1. Executive Summary
 
-## Audit Instructions
-To verify the input system is working correctly:
-1. Open the game in your browser using `npm run dev`.
-2. Open the browser's developer console (F12 or Right Click -> Inspect -> Console).
-3. Type `window.audit.logInputs = true;` into the console and press Enter.
-4. The console will begin rapidly logging the current input state.
-5. Press keys (e.g., 'W', 'A', 'S', 'D') and click/move your mouse. You will see the logged state dynamically reflect these inputs.
-6. To stop logging, type `window.audit.logInputs = false;` in the console.
+The engine now tracks what the player is doing with their keyboard and mouse. It knows which keys are held down, where the mouse is, which buttons are pressed, and — importantly — which keys were *just* tapped, even if the tap was faster than a single frame of the game.
 
-## Lessons Learned
-- Creating a robust interface for inputs ensures that the game loop logic won't be cluttered with event listeners when entities are implemented. The clean `getState()` method allows for easy dependency injection to other systems later on.
+## 2. Technical Decisions & Architecture
+
+`InputManager` sits in Tier 1 (Engine) and is the only place in the codebase that touches browser input events. It exposes a single `getState()` method, so any system that needs input receives a plain snapshot rather than wiring up its own listeners.
+
+The state has two halves, and the distinction matters:
+
+- **Held keys** answer "is the player pressing this right now?" — the right question for movement.
+- **Just-pressed keys** answer "did the player tap this since the last frame?" — the right question for anything that should happen once per press, such as using the stairs, attacking, or opening a menu.
+
+The browser's right-click menu is suppressed so the right mouse button can be used in-game.
+
+## 3. Lessons Learned
+
+The original implementation only tracked held keys, and each system did its own edge detection by remembering whether the key had been held on the previous frame. That approach loses any press that begins and ends between two frames. It is not a theoretical concern: it was reproduced reliably during Phase 11.5, where quick taps of the interact key were dropped and the staircase simply failed to respond.
+
+Moving edge detection into the input layer fixed it in one place for every future consumer, and removed the duplicated bookkeeping from the player. The cost is that the game loop must call `endFrame()` once per frame to clear the edge state, after everything that reads input has run.
+
+## 4. Effortless Audit Toolkit
+
+**Audit Steps:**
+
+1. Launch the local dev server (`npm run dev`).
+2. Open the browser console (press F12).
+3. Type `window.audit.logInputs = true;` and press Enter.
+4. The console begins logging the input state every frame.
+5. Press W, A, S and D, move the mouse, and click. The logged state should reflect each action as you do it.
+6. Tap the E key as fast as you can. Every tap should appear in `justPressed`, even the fastest ones.
+7. Type `window.audit.logInputs = false;` to stop logging.

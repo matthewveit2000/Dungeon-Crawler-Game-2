@@ -85,6 +85,25 @@
 * *TDD Criteria:* Interaction distance checks succeed, and floor state resets.
 * *Verification:* PM runs window.audit.teleportToStairs(), interacts, and sees a completely new map load.
 
+- **Phase 11.5: Hardening Checkpoint** *(inserted after the Epic 1-3 audit; complete)*
+
+* *Objective:* Close the defects and architectural drift found by the audit of Epics 1-3 before further systems are built on top of them. Repair continuous integration, replace the variable-delta loop with a true fixed timestep, fix wall tunnelling and diagonal corner-cutting, restore the Tier 1/Tier 2 boundary, move hardcoded values into Tier 3, seed world generation, fix entity lifecycle leaks, and repair the audit toolkit.
+* *Tier Impacted:* All tiers, plus repository infrastructure.
+* *TDD Criteria:* Regression tests for every defect, each written to fail against the previous implementation.
+* *Verification:* PM follows the audit steps in `.docs/milestones/phase-11.5.md`.
+
+### Open Decision: World Scale
+
+The world is a bounded grid, not an endless one. Phase 11.5 enlarged it from 4,000 to 6,400 pixels square, which puts the staircase roughly twenty seconds of running away in a straight line before any exploration. Epic 4 gives the player three hundred seconds.
+
+Whether that is the right shape for the game is a PM decision, not a technical one, and it should be settled before Epic 4 is designed:
+
+- **Genuinely endless floors.** Grow the grid substantially and build the chunked, view-culled rendering that would require. Closest to the vision in `README.md`; the largest piece of work.
+- **Same grid, different pacing.** Slow the player and shrink the tiles so the existing map takes minutes to cross. Cheap, but floors stay structurally small and will start to feel repetitive.
+- **Accept compact floors.** Make the five minutes about surviving combat and choosing when to descend, rather than about finding the stairs. Also cheap, but the exploration fantasy in `README.md` and `.docs/PLAYER_GUIDE.md` would need rewriting.
+
+`.docs/SYSTEMS_OVERVIEW.md` describes the bounded grid that exists today and must be updated in whichever PR settles this.
+
 ## EPIC 4: The 5-Minute Timer & Simulation Control
 
 - **Phase 12: Delta-Time Countdown Logic**
@@ -111,6 +130,7 @@
 - **Phase 15: EPIC 1-4 Refactoring Checkpoint**
 
 * *Objective:* Execute the mandatory phase-based cleanup. Profile for memory leaks and ensure AABB collision logic is optimized.
+* *Checklist:* Run the architectural tripwires in `AGENTS.md` §7 — no Tier 2 module importing `pixi.js`, no magic numbers outside Tier 3, no game rules in `main.ts`, nothing removed without being destroyed, and all randomness seeded. Measure the heap across fifty floor descents and confirm it does not trend upward.
 
 ## EPIC 5: Combat Systems & Entity AI
 

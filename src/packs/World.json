@@ -1,0 +1,22 @@
+{
+  "grid": {
+    "width": 160,
+    "height": 160
+  },
+  "tileSize": 40,
+  "generation": {
+    "walkSteps": 40000,
+    "brushRadius": 1
+  },
+  "palette": {
+    "wall": "0x2b2d33",
+    "floor": "0xa8a9ad"
+  },
+  "background": "0x15161a",
+  "overlay": {
+    "tileSize": 4,
+    "backdrop": "0x0d0e11",
+    "backdropAlpha": 0.85,
+    "padding": 16
+  }
+}

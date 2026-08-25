@@ -4,10 +4,26 @@ This document translates the player-facing gameplay experience into the underlyi
 
 ## 1. Procedural World Architecture & Scale
 
-The procedural map generation utilizes a modified random-walk algorithm.
+The procedural map generation utilizes a random-walk algorithm. Every parameter below lives in `src/packs/World.json`, so the scale and feel of a floor can be tuned without touching code.
 
-- **The Abstract Grid:** The map does not exist as physical objects until the player is near them. Coordinates exist on a massive, theoretical mathematical grid. As the player explores, the game renders only the chunks of the grid currently in view, ensuring the game never runs out of memory, no matter how "infinite" the map feels.
-- **Prefab Instancing:** Standard dungeon rooms are generated randomly, but "Cities" and "Boss Arenas" are pre-designed templates stored in Tier 3 Packs. The map generator injects these templates into the random grid at specific mathematical intervals.
+- **The Grid:** A floor is a fixed grid of tiles held as a single flat array. At the shipped settings that is 160 x 160 tiles of 40 pixels each — a world 6,400 pixels square. The whole grid is generated up front when a floor is created.
+- **Carving the Cave:** A walker starts at the centre of the grid and takes 40,000 random steps, stamping a three-tile-wide brush of floor as it goes. Because the walker never teleports, every carved tile is connected to the start by construction: there can be no sealed-off pocket the player cannot reach. The brush width matters for play, not just looks — corridors only one tile wide demand near-perfect alignment to enter, which makes navigating feel fiddly.
+- **Rendering:** Only floor tiles are drawn, and runs of adjacent floor tiles along a row are merged into single rectangles. Solid rock is simply the background showing through, so the most common tile costs nothing to draw.
+- **A Note on Scale:** The map is currently a bounded grid, not an endless one. It is large enough that crossing it takes real time, but it does have edges. Genuinely endless floors would need the map to be built and drawn in chunks as the player moves, which is a larger change and an open decision for the PM. This document will be updated when that decision is made — it must never describe a system the code does not have.
+- **Prefab Instancing:** Standard dungeon caves are generated randomly, but "Cities" and "Boss Arenas" will be pre-designed templates stored in Tier 3 Packs. The map generator will inject these templates into the random grid at specific mathematical intervals. *(Planned for Epics 7 and 8; not yet built.)*
+
+### Reproducible Runs
+
+Every roll of the dice in world generation comes from a seeded generator rather than the browser's own randomness. The same seed always produces exactly the same floor. This makes a reported problem reproducible, lets the test suite assert on generated maps, and leaves the door open for players to share a seed.
+
+## 1a. Movement and Collision
+
+The player is a box that moves through a grid of solid tiles. Two rules keep that honest, and both exist because their absence caused real defects:
+
+- **Movement is broken into small steps.** A body never moves more than half a tile between collision checks. Checking only the destination meant that during any stutter — a long frame, a garbage collection pause, or returning to a backgrounded tab — the player could jump clean over a wall and end up outside the map.
+- **The two axes are resolved in sequence, not independently.** Horizontal movement is applied first, then vertical movement is checked against the *already updated* horizontal position. Checking both against the original position let the player slip diagonally into the inside corner of a wall. Once inside, every direction out was blocked too, and the run was over.
+
+Where a body is blocked, it settles flush against the wall rather than stopping short of it, and continues sliding along the wall on the axis that is still free.
 
 ## 2. The 5-Minute Timer Engine & Pausing
 

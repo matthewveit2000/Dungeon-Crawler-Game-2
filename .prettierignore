@@ -1,0 +1,8 @@
+dist/
+node_modules/
+coverage/
+package-lock.json
+
+# Documentation is prose. Reformatting it produces noisy diffs that bury the
+# actual change, and the documents are reviewed by a human, not a parser.
+**/*.md

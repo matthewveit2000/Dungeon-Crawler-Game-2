@@ -2,6 +2,8 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { Player } from './Player';
 import { InputManager } from '../engine/InputManager';
 import { Application } from 'pixi.js';
+import { Level } from './Level';
+import { TileType } from './MapGenerator';
 
 describe('Player', () => {
   let inputManager: InputManager;
@@ -104,5 +106,38 @@ describe('Player', () => {
 
     // Position should be exactly the same since input stopped
     expect(player.y).toBe(yAfterMove);
+  });
+
+  it('collides with walls and stops moving', () => {
+    // Create a mock level with walls everywhere except a small floor space
+    const mockLevel = new Level(10, 10, 0); // 0 steps to generate just walls
+    // The random walker generates floors randomly. We reset it to be deterministic for this test.
+    for (let y = 0; y < 10; y++) {
+      for (let x = 0; x < 10; x++) {
+        mockLevel.grid.set(x, y, TileType.WALL);
+      }
+    }
+    // Set floor at (1, 1) and (1, 2)
+    mockLevel.grid.set(1, 1, TileType.FLOOR);
+    mockLevel.grid.set(1, 2, TileType.FLOOR);
+
+    // Position player at (1 * 40 + 20, 1 * 40 + 20) = (60, 60) which is center of (1, 1) tile
+    // Width and height of player is 40.
+    const playerWithCollision = new Player('player-col', 60, 60, inputManager, mockLevel);
+
+    // Try to move left into a wall (tile 0, 1)
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'a' }));
+    playerWithCollision.update(1);
+
+    // Player X should be unchanged or nearly unchanged because it hit the wall immediately
+    expect(playerWithCollision.x).toBe(60);
+
+    window.dispatchEvent(new KeyboardEvent('keyup', { key: 'a' }));
+
+    // Move down into a floor (tile 1, 2)
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 's' }));
+    playerWithCollision.update(0.1); // Move 20 pixels down
+
+    expect(playerWithCollision.y).toBe(60 + playerWithCollision.speed * 0.1); // 80
   });
 });

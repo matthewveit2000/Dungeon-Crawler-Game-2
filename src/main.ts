@@ -8,6 +8,7 @@ import { Camera } from './engine/Camera';
 import { Graphics } from 'pixi.js';
 import { MapGrid } from './modules/MapGrid';
 import { MapGenerator, TileType } from './modules/MapGenerator';
+import { Level } from './modules/Level';
 
 // Define the audit interface for the global window object
 declare global {
@@ -37,18 +38,9 @@ async function bootstrap() {
   // Phase 7: Camera Tracking Logic
   const camera = new Camera(renderer.app.stage, renderer.app.renderer.width, renderer.app.renderer.height);
 
-  // Background grid to visualize camera movement
-  const grid = new Graphics();
-  for (let x = -2000; x <= 2000; x += 100) {
-    grid.moveTo(x, -2000);
-    grid.lineTo(x, 2000);
-  }
-  for (let y = -2000; y <= 2000; y += 100) {
-    grid.moveTo(-2000, y);
-    grid.lineTo(2000, y);
-  }
-  grid.stroke({ width: 1, color: 0x333333 });
-  renderer.app.stage.addChildAt(grid, 0); // add to the very back
+  // Phase 10: Tile Rendering
+  const level = new Level(100, 100);
+  renderer.app.stage.addChildAt(level.view, 0); // Add behind everything else
 
   window.addEventListener('resize', () => {
     camera.resize(renderer.app.renderer.width, renderer.app.renderer.height);
@@ -81,10 +73,14 @@ async function bootstrap() {
     },
 
     spawnPlayer: () => {
-      const player = new Player('player-1', 400, 300, inputManager);
+      // Spawn player in the center of the level grid where it is guaranteed to be a floor
+      const centerX = Math.floor(level.grid.width / 2) * level.tileSize + level.tileSize / 2;
+      const centerY = Math.floor(level.grid.height / 2) * level.tileSize + level.tileSize / 2;
+
+      const player = new Player('player-1', centerX, centerY, inputManager, level);
       entityManager.addEntity(player);
       camera.setTarget(player);
-      console.log('Player spawned via EntityManager at (400, 300). Camera tracking engaged. Use WASD to move.');
+      console.log(`Player spawned via EntityManager at (${centerX}, ${centerY}). Camera tracking engaged. Use WASD to move.`);
     },
 
     getRendererDimensions: () => {

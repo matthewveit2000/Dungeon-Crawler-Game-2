@@ -1,14 +1,17 @@
 import { Graphics } from 'pixi.js';
 import { Entity } from '../engine/Entity';
 import { InputManager } from '../engine/InputManager';
+import { Level } from './Level';
 
 export class Player extends Entity {
   private graphics: Graphics;
   private inputManager: InputManager;
   public speed: number = 200; // pixels per second
+  private level?: Level;
 
-  constructor(id: string, x: number, y: number, inputManager: InputManager) {
+  constructor(id: string, x: number, y: number, inputManager: InputManager, level?: Level) {
     super(id, x, y);
+    this.level = level;
     this.width = 40;
     this.height = 40;
     this.inputManager = inputManager;
@@ -45,12 +48,22 @@ export class Player extends Entity {
       dx /= length;
       dy /= length;
 
-      // Update logical position based on dt
-      // Note: dt is typically passed in milliseconds or seconds depending on GameLoop.
-      // GameLoop usually passes seconds if we want pixels per second. Let's check GameLoop.
-      // Assuming dt is in seconds or we adjust accordingly.
-      this.x += dx * this.speed * dt;
-      this.y += dy * this.speed * dt;
+      let nextX = this.x + dx * this.speed * dt;
+      let nextY = this.y + dy * this.speed * dt;
+
+      // Check collision on X axis
+      if (this.level && this.level.isCollidingWithWall(nextX, this.y, this.width, this.height)) {
+        nextX = this.x; // Block movement on X
+      }
+
+      // Check collision on Y axis
+      if (this.level && this.level.isCollidingWithWall(this.x, nextY, this.width, this.height)) {
+        nextY = this.y; // Block movement on Y
+      }
+
+      // Update logical position
+      this.x = nextX;
+      this.y = nextY;
 
       // Update visual position
       this.sprite.x = this.x;

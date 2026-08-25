@@ -1,59 +1,47 @@
-import { expect, test, describe, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { Staircase } from './Staircase';
-import { Player } from './Player';
-import { InputManager } from '../engine/InputManager';
+import { TestSquare } from './TestSquare';
 import interactables from '../packs/Interactables.json';
+import debug from '../packs/Debug.json';
 
-describe('Staircase Entity', () => {
-  test('initializes with correct properties from JSON', () => {
-    const staircase = new Staircase('test-staircase', 100, 100);
-
-    expect(staircase.id).toBe('test-staircase');
+describe('Staircase', () => {
+  it('takes its dimensions from the Tier 3 pack', () => {
+    const staircase = new Staircase('stairs', 100, 200);
+    expect(staircase.id).toBe('stairs');
     expect(staircase.x).toBe(100);
-    expect(staircase.y).toBe(100);
+    expect(staircase.y).toBe(200);
     expect(staircase.width).toBe(interactables.staircase.width);
     expect(staircase.height).toBe(interactables.staircase.height);
   });
-});
 
-describe('Player Interaction', () => {
-  test('interacts with staircase when e is pressed and within range', () => {
-    const inputManager = new InputManager();
-    const player = new Player('player', 0, 0, inputManager);
-    const staircase = new Staircase('stairs', 10, 10);
-
-    let interactionTriggered = false;
-    player.setStaircase(staircase);
-    player.setInteractionCallback(() => {
-      interactionTriggered = true;
-    });
-
-    // Mock key press
-    vi.spyOn(inputManager, 'getState').mockReturnValue({ keys: { 'e': true }, mouse: { x: 0, y: 0, left: false, right: false } });
-
-    // Distance is sqrt(100 + 100) = ~14.14 < 60
-    player.update(1/60);
-
-    expect(interactionTriggered).toBe(true);
+  it('places its view at its position', () => {
+    const staircase = new Staircase('stairs', 100, 200);
+    expect(staircase.sprite.x).toBe(100);
+    expect(staircase.sprite.y).toBe(200);
   });
 
-  test('does not interact if out of range', () => {
-    const inputManager = new InputManager();
-    const player = new Player('player', 0, 0, inputManager);
-    // Set staircase out of range (distance 100)
-    const staircase = new Staircase('stairs', 100, 0);
+  it('does not move when updated', () => {
+    const staircase = new Staircase('stairs', 100, 200);
+    staircase.update(1 / 60);
+    expect(staircase.x).toBe(100);
+    expect(staircase.y).toBe(200);
+  });
+});
 
-    let interactionTriggered = false;
-    player.setStaircase(staircase);
-    player.setInteractionCallback(() => {
-      interactionTriggered = true;
-    });
+describe('TestSquare', () => {
+  it('takes its appearance from the Tier 3 debug pack', () => {
+    const square = new TestSquare('square', 10, 20);
+    expect(square.width).toBe(debug.testSquare.width);
+    expect(square.height).toBe(debug.testSquare.height);
+  });
 
-    // Mock key press
-    vi.spyOn(inputManager, 'getState').mockReturnValue({ keys: { 'e': true }, mouse: { x: 0, y: 0, left: false, right: false } });
+  it('spins at a rate independent of frame rate', () => {
+    const oneBigStep = new TestSquare('a', 0, 0);
+    oneBigStep.update(1);
 
-    player.update(1/60);
+    const manySmallSteps = new TestSquare('b', 0, 0);
+    for (let i = 0; i < 60; i++) manySmallSteps.update(1 / 60);
 
-    expect(interactionTriggered).toBe(false);
+    expect(manySmallSteps.sprite.rotation).toBeCloseTo(oneBigStep.sprite.rotation, 6);
   });
 });

@@ -1,32 +1,25 @@
-import { Graphics } from 'pixi.js';
 import { Entity } from '../engine/Entity';
+import { parseColor } from '../engine/View';
 import interactables from '../packs/Interactables.json';
 
+/**
+ * Staircase — the exit from a floor.
+ *
+ * Tier 2. Its dimensions and colour come from the Tier 3 interactables pack; it
+ * has no behaviour of its own, because the interaction check lives with the
+ * player that performs it.
+ */
 export class Staircase extends Entity {
-  private graphics: Graphics;
-
   constructor(id: string, x: number, y: number) {
-    super(id, x, y);
-
     const config = interactables.staircase;
-    this.width = config.width;
-    this.height = config.height;
-
-    this.graphics = new Graphics();
-    this.graphics.rect(0, 0, this.width, this.height);
-    this.graphics.fill(Number(config.color)); // Blue for staircase
-
-    this.sprite.addChild(this.graphics);
-    // Center the sprite's anchor
-    this.sprite.pivot.x = this.width / 2;
-    this.sprite.pivot.y = this.height / 2;
-
-    // Set initial position
-    this.sprite.x = this.x;
-    this.sprite.y = this.y;
+    super(id, x, y, {
+      width: config.width,
+      height: config.height,
+      color: parseColor(config.color),
+    });
   }
 
-  update(_dt: number): void {
-    // Static entity, no physics update needed
+  public update(_dt: number): void {
+    // Static: the staircase never moves or animates.
   }
 }

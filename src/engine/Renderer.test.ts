@@ -35,12 +35,27 @@ describe('Renderer', () => {
     expect(container.children[0].tagName).toBe('CANVAS');
   });
 
+  it('separates the camera-moved world from screen-fixed UI', () => {
+    renderer = new Renderer();
+    return renderer.init(container).then(() => {
+      // An overlay parented to the world would scroll away with the camera.
+      expect(renderer.app.stage.children).toEqual([renderer.world, renderer.ui]);
+    });
+  });
+
+  it('renders at the display pixel density instead of being upscaled', () => {
+    renderer = new Renderer();
+    return renderer.init(container).then(() => {
+      expect(renderer.app.renderer.resolution).toBe(window.devicePixelRatio || 1);
+    });
+  });
+
   it('should set the renderer dimensions to the window dimensions upon initialization', async () => {
     renderer = new Renderer();
     await renderer.init(container);
 
-    expect(renderer.app.renderer.width).toBe(800);
-    expect(renderer.app.renderer.height).toBe(600);
+    expect(renderer.screenWidth).toBe(800);
+    expect(renderer.screenHeight).toBe(600);
   });
 
   it('should update the application renderer dimensions when a resize event is dispatched', async () => {
@@ -57,7 +72,7 @@ describe('Renderer', () => {
     // Wait a tick for resize event to be processed if it's asynchronous
     await new Promise((resolve) => setTimeout(resolve, 0));
 
-    expect(renderer.app.renderer.width).toBe(1024);
-    expect(renderer.app.renderer.height).toBe(768);
+    expect(renderer.screenWidth).toBe(1024);
+    expect(renderer.screenHeight).toBe(768);
   });
 });

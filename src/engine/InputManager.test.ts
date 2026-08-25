@@ -14,6 +14,7 @@ describe('InputManager', () => {
 
   it('initializes with default state', () => {
     const state = inputManager.getState();
+    expect(state.justPressed).toEqual({});
     expect(state.keys).toEqual({});
     expect(state.mouse).toEqual({
       x: 0,
@@ -70,10 +71,48 @@ describe('InputManager', () => {
     expect(state.mouse.right).toBe(false);
   });
 
+  describe('edge state', () => {
+    it('records a key press for one frame', () => {
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'E' }));
+      expect(inputManager.getState().justPressed['e']).toBe(true);
+
+      inputManager.endFrame();
+      expect(inputManager.getState().justPressed['e']).toBeUndefined();
+    });
+
+    it('keeps a tap that starts and ends inside one frame', () => {
+      // Anything edge-triggered would silently drop this input otherwise.
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'e' }));
+      window.dispatchEvent(new KeyboardEvent('keyup', { key: 'e' }));
+
+      const state = inputManager.getState();
+      expect(state.keys['e']).toBe(false);
+      expect(state.justPressed['e']).toBe(true);
+    });
+
+    it('does not re-fire while a key is held', () => {
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'e' }));
+      inputManager.endFrame();
+      // The browser repeats keydown for a held key.
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'e' }));
+      expect(inputManager.getState().justPressed['e']).toBeUndefined();
+    });
+
+    it('fires again after a release and a fresh press', () => {
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'e' }));
+      inputManager.endFrame();
+      window.dispatchEvent(new KeyboardEvent('keyup', { key: 'e' }));
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'e' }));
+      expect(inputManager.getState().justPressed['e']).toBe(true);
+    });
+  });
+
   it('prevents default on contextmenu', () => {
     const event = new MouseEvent('contextmenu');
     let preventDefaultCalled = false;
-    event.preventDefault = () => { preventDefaultCalled = true; };
+    event.preventDefault = () => {
+      preventDefaultCalled = true;
+    };
 
     window.dispatchEvent(event);
     expect(preventDefaultCalled).toBe(true);

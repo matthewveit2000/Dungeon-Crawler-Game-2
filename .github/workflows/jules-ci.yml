@@ -1,0 +1,52 @@
+name: CI
+
+# Every push and every pull request. A pull request that has not gone green
+# here must not be merged: eleven merges happened against a broken workflow
+# before anyone noticed the checks had never run.
+on:
+  push:
+    branches: ['**']
+  pull_request:
+    branches: ['**']
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Typecheck, test and build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check formatting
+        run: npm run format:check
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      # `npm test` runs `vitest run`, which exits when finished. Watch mode
+      # would hang the job until the runner timed out.
+      - name: Run the test suite
+        run: npm test
+
+      - name: Build for production
+        run: npm run build
+
+      - name: Check architectural boundaries
+        run: node scripts/check-architecture.mjs
+
+      - name: Confirm the audit toolkit is intact
+        run: node scripts/check-audit-toolkit.mjs

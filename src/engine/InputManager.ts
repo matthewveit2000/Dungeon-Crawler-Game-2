@@ -1,5 +1,13 @@
 export interface InputState {
+  /** Keys held down right now. */
   keys: { [key: string]: boolean };
+  /**
+   * Keys that went down since the last frame boundary, whether or not they are
+   * still held. A tap shorter than one frame is invisible to `keys` alone, so
+   * anything edge-triggered — interacting, attacking, opening a menu — must
+   * read this instead or it will silently drop inputs.
+   */
+  justPressed: { [key: string]: boolean };
   mouse: {
     x: number;
     y: number;
@@ -10,6 +18,7 @@ export interface InputState {
 
 export class InputManager {
   private keys: { [key: string]: boolean } = {};
+  private justPressed: { [key: string]: boolean } = {};
   private mouse = {
     x: 0,
     y: 0,
@@ -40,7 +49,10 @@ export class InputManager {
   }
 
   private handleKeyDown = (e: KeyboardEvent) => {
-    this.keys[e.key.toLowerCase()] = true;
+    const key = e.key.toLowerCase();
+    // Browsers repeat keydown while a key is held; only the first is an edge.
+    if (!this.keys[key]) this.justPressed[key] = true;
+    this.keys[key] = true;
   };
 
   private handleKeyUp = (e: KeyboardEvent) => {
@@ -75,8 +87,17 @@ export class InputManager {
   public getState(): InputState {
     return {
       keys: { ...this.keys },
+      justPressed: { ...this.justPressed },
       mouse: { ...this.mouse },
     };
+  }
+
+  /**
+   * Clears the one-frame edge state. Call once per frame, after everything that
+   * reads input has run.
+   */
+  public endFrame(): void {
+    this.justPressed = {};
   }
 
   public destroy() {

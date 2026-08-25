@@ -70,10 +70,16 @@ if (world.tileSize !== world.spriteResolution) {
       'A mismatch forces every sprite to be scaled by a fraction, which is what destroys pixel art.',
   );
 }
+// Built from Tier 3 rather than written as a literal, so that changing the
+// resolution cannot leave this check quietly guarding the previous number.
+const resolution = world.spriteResolution;
+const restatesResolution = new RegExp(
+  `(?<![.\\w])(?:${resolution}|tileSize)\\s*[*/]\\s*${resolution}(?![.\\w])`,
+);
 for (const file of sourceFiles('src')) {
   const text = readFileSync(file, 'utf8');
   // Restating the resolution as a literal is how the number drifts out of sync.
-  if (/(?<![.\w])(?:64|tileSize)\s*[*/]\s*(?:64)(?![.\w])/.test(text)) {
+  if (restatesResolution.test(text)) {
     failures.push(
       `${relative('.', file)} appears to hardcode the sprite resolution. ` +
         'Read it from World.json instead.',

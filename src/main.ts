@@ -171,7 +171,9 @@ async function bootstrap(): Promise<void> {
 
     toggleMenu: () => {
       gameLoop.isMenuOpen = !gameLoop.isMenuOpen;
-      return gameLoop.isMenuOpen ? 'Menu open. Simulation paused.' : 'Menu closed. Simulation resumed.';
+      return gameLoop.isMenuOpen
+        ? 'Menu open. Simulation paused.'
+        : 'Menu closed. Simulation resumed.';
     },
 
     getFloorStats: () => {

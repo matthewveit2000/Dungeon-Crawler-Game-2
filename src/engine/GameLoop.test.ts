@@ -163,7 +163,7 @@ describe('GameLoop', () => {
 
     // Advance 2 whole seconds while menu is open
     for (let i = 1; i <= 120; i++) {
-      loop.advance((1000 / 60) + (i * 1000 / 60));
+      loop.advance(1000 / 60 + (i * 1000) / 60);
     }
 
     // Simulation must not have progressed
@@ -173,7 +173,7 @@ describe('GameLoop', () => {
     loop.isMenuOpen = false;
 
     // Resume normally with 1 frame advance
-    loop.advance((1000 / 60) + (121 * 1000 / 60));
+    loop.advance(1000 / 60 + (121 * 1000) / 60);
 
     // Should only step 1 frame (not 120 frames worth of catch-up logic)
     expect(update).toHaveBeenCalledTimes(1);

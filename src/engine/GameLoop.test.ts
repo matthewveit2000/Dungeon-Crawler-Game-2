@@ -147,4 +147,37 @@ describe('GameLoop', () => {
     expect(loop.getFPS()).toBeGreaterThanOrEqual(59);
     expect(loop.getFPS()).toBeLessThanOrEqual(61);
   });
+
+  it('stops simulating when isMenuOpen is true, without accumulating a massive delta jump', () => {
+    const loop = new GameLoop({ fixedStep: 1 / 60 });
+    const update = vi.fn();
+    loop.start(update, 0);
+
+    // Normal advance
+    loop.advance(1000 / 60);
+    expect(update).toHaveBeenCalledTimes(1);
+    update.mockClear();
+
+    // Pause with menu
+    loop.isMenuOpen = true;
+
+    // Advance 2 whole seconds while menu is open
+    for (let i = 1; i <= 120; i++) {
+      loop.advance((1000 / 60) + (i * 1000 / 60));
+    }
+
+    // Simulation must not have progressed
+    expect(update).not.toHaveBeenCalled();
+
+    // Unpause menu
+    loop.isMenuOpen = false;
+
+    // Resume normally with 1 frame advance
+    loop.advance((1000 / 60) + (121 * 1000 / 60));
+
+    // Should only step 1 frame (not 120 frames worth of catch-up logic)
+    expect(update).toHaveBeenCalledTimes(1);
+
+    loop.stop();
+  });
 });

@@ -27,6 +27,7 @@ interface AuditToolkit {
   setSeed(seed: number): string;
   getFloorStats(): Record<string, number>;
   setTimer(seconds: number): string;
+  toggleMenu(): string;
 }
 
 declare global {
@@ -166,6 +167,11 @@ async function bootstrap(): Promise<void> {
     setTimer: (seconds: number) => {
       timer.setTime(seconds);
       return `Global timer set to ${seconds} seconds.`;
+    },
+
+    toggleMenu: () => {
+      gameLoop.isMenuOpen = !gameLoop.isMenuOpen;
+      return gameLoop.isMenuOpen ? 'Menu open. Simulation paused.' : 'Menu closed. Simulation resumed.';
     },
 
     getFloorStats: () => {

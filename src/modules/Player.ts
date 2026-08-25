@@ -8,12 +8,15 @@ export class Player extends Entity {
   private inputManager: InputManager;
   public speed: number = 200; // pixels per second
   private level?: Level;
+  private staircase?: Entity;
+  private onInteract?: () => void;
+  private wasInteractPressed: boolean = false;
 
   constructor(id: string, x: number, y: number, inputManager: InputManager, level?: Level) {
     super(id, x, y);
     this.level = level;
-    this.width = 40;
-    this.height = 40;
+    this.width = 10;
+    this.height = 10;
     this.inputManager = inputManager;
 
     this.graphics = new Graphics();
@@ -30,9 +33,35 @@ export class Player extends Entity {
     this.sprite.y = this.y;
   }
 
+  public setStaircase(staircase: Entity): void {
+    this.staircase = staircase;
+  }
+
+  public setInteractionCallback(cb: () => void): void {
+    this.onInteract = cb;
+  }
+
   update(dt: number): void {
     const inputState = this.inputManager.getState();
     const keys = inputState.keys;
+
+    const isInteractPressed = keys['e'] === true;
+
+    if (isInteractPressed && !this.wasInteractPressed) {
+      this.wasInteractPressed = true;
+      if (this.staircase && this.onInteract) {
+        const dx = this.x - this.staircase.x;
+        const dy = this.y - this.staircase.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        if (distance < 60) {
+          this.onInteract();
+        }
+      }
+    } else if (!isInteractPressed) {
+      this.wasInteractPressed = false;
+    }
+
 
     let dx = 0;
     let dy = 0;

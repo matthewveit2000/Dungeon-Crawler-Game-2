@@ -7,16 +7,24 @@ export class Level {
   public view: Container;
   public tileSize: number = 40; // Pixels per tile
   private mapGraphics: Graphics;
+  private steps: number;
 
   constructor(width: number, height: number, steps: number = 5000) {
+    this.steps = steps;
     this.grid = new MapGrid<TileType>(width, height, TileType.WALL);
-    MapGenerator.generateRandomWalk(this.grid, steps);
+    MapGenerator.generateRandomWalk(this.grid, this.steps);
 
     this.view = new Container();
     this.mapGraphics = new Graphics();
 
     this.renderTiles();
     this.view.addChild(this.mapGraphics);
+  }
+
+  public regenerate(): void {
+    this.grid = new MapGrid<TileType>(this.grid.width, this.grid.height, TileType.WALL);
+    MapGenerator.generateRandomWalk(this.grid, this.steps);
+    this.renderTiles();
   }
 
   private renderTiles(): void {

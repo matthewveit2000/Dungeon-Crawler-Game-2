@@ -58,11 +58,17 @@ The game is playable the moment the page loads. For hands-on verification, open 
 | `window.audit.getRendererDimensions()` | Reports the canvas size. |
 | `window.audit.logInputs = true` | Logs every keystroke and mouse movement. |
 
+## Art Direction
+
+The game is pixel art at **64 x 64 pixels per sprite** — one sprite fills exactly one floor tile, placed at 1:1 with no scaling. That is the high-fidelity end of the style, chosen so a character's armour and weapon stay readable, which matters in a game built around finding better gear. A typical window shows about 20 tiles across.
+
+`.docs/ART_GUIDE.md` is the full specification for anyone producing art. The resolution is stated once in `src/packs/World.json` and enforced by both the test suite and CI, so the documentation cannot drift away from the build.
+
 ## Tuning the Game Without Touching Code
 
 Everything tunable lives as data in `src/packs/`:
 
-- **`World.json`** — floor dimensions, tile size, how much cave gets carved, corridor width, colours.
+- **`World.json`** — sprite resolution, floor dimensions, tile size, how much cave gets carved, corridor width, colours.
 - **`Player.json`** — movement speed, size, colour, how close you must be to use the stairs.
 - **`Controls.json`** — key bindings.
 - **`Interactables.json`** — the staircase.

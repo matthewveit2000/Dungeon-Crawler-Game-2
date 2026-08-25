@@ -22,7 +22,7 @@ When implementing exact bounding box checks in a tile-based grid, it is critical
 
 *Diagonal movement cut corners, and cutting a corner ended the run.* Each axis was tested against the original position, so at an inside corner both axes passed individually while the corner tile between them was solid. The player ended up embedded in a wall — and from inside a wall every direction out is also blocked, so they were stuck permanently with no key able to free them. The vertical axis is now tested against the already-resolved horizontal position, which closes the gap. As a backstop, a body that somehow ends up inside geometry is allowed to move freely so it can always walk back out.
 
-That second defect is worth dwelling on, because the symptom was misread. It presented as "the character cannot get around the map", and the response was to shrink the character — from 40 pixels to 30, then 20, then 10, across four commits in a later PR, each described as making it fit through hallways. The character had always fitted; a 10-pixel body in a 40-pixel corridor has three tiles of slack. Shrinking it changed nothing except how small it looked. The fix was in the collision routine all along.
+That second defect is worth dwelling on, because the symptom was misread. It presented as "the character cannot get around the map", and the response was to shrink the character — from 40 pixels to 30, then 20, then 10, across four commits in a later PR, each described as making it fit through hallways. The character had always fitted; a 10-pixel body in a 40-pixel corridor has 30 pixels of slack, three quarters of the corridor. Shrinking it changed nothing except how small it looked. The fix was in the collision routine all along.
 
 ## 4. Effortless Audit Toolkit
 

@@ -91,6 +91,8 @@ describe('Level', () => {
   });
 
   describe('isCollidingWithWall', () => {
+    // Expressed in tiles rather than pixels, so a change of tile size cannot
+    // silently invalidate what these assertions are checking.
     const walled = () => {
       const level = new Level({ width: 10, height: 10, steps: 0, seed: 1 });
       for (let y = 0; y < 10; y++) {
@@ -101,21 +103,35 @@ describe('Level', () => {
     };
 
     it('reports no collision inside a floor tile', () => {
-      expect(walled().isCollidingWithWall(60, 60, 10, 10)).toBe(false);
+      const level = walled();
+      const size = level.tileSize / 4;
+      const at = level.tileCenter(1, 1);
+      expect(level.isCollidingWithWall(at.x, at.y, size, size)).toBe(false);
     });
 
     it('reports a collision when overlapping a wall tile', () => {
-      expect(walled().isCollidingWithWall(85, 60, 10, 10)).toBe(true);
+      const level = walled();
+      const size = level.tileSize / 4;
+      const at = level.tileCenter(1, 1);
+      // Nudged far enough right that the box straddles into tile (2, 1).
+      expect(level.isCollidingWithWall(at.x + level.tileSize / 2, at.y, size, size)).toBe(true);
     });
 
     it('treats out of bounds as solid', () => {
-      expect(walled().isCollidingWithWall(-20, 60, 10, 10)).toBe(true);
-      expect(walled().isCollidingWithWall(60, 5000, 10, 10)).toBe(true);
+      const level = walled();
+      const size = level.tileSize / 4;
+      const at = level.tileCenter(1, 1);
+      expect(level.isCollidingWithWall(-level.tileSize, at.y, size, size)).toBe(true);
+      expect(level.isCollidingWithWall(at.x, level.tileSize * 100, size, size)).toBe(true);
     });
 
     it('does not falsely collide with the tile past an exact boundary', () => {
-      // A body flush against x = 80 occupies tiles up to but not including 2.
-      expect(walled().isCollidingWithWall(75, 60, 10, 10)).toBe(false);
+      // A box flush against the far edge of a tile occupies that tile only.
+      const level = walled();
+      const size = level.tileSize / 4;
+      const flushX = 2 * level.tileSize - size / 2;
+      const at = level.tileCenter(1, 1);
+      expect(level.isCollidingWithWall(flushX, at.y, size, size)).toBe(false);
     });
   });
 });

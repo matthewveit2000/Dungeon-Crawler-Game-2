@@ -1,12 +1,13 @@
 {
+  "spriteResolution": 64,
   "grid": {
     "width": 160,
     "height": 160
   },
-  "tileSize": 40,
+  "tileSize": 64,
   "generation": {
     "walkSteps": 40000,
-    "brushRadius": 1
+    "brushRadius": 0
   },
   "palette": {
     "wall": "0x2b2d33",

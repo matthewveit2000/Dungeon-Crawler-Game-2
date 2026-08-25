@@ -15,6 +15,7 @@ The following Markdown files are the project's source of truth. Before making a 
 - **`README.md`** — High-level project overview, architecture summary, setup instructions, and basic testing information.
 - **`.docs/SYSTEMS_OVERVIEW.md`** — Detailed system behavior, architecture relationships, gameplay rules, and mathematical formulas.
 - **`.docs/PLAYER_GUIDE.md`** — Player-facing gameplay rules, controls, mechanics, progression, and terminology.
+- **`.docs/ART_GUIDE.md`** — Sprite specification: art resolution, canvas sizes, alignment, collision-box relationship, and authoring rules. The source of truth for anything that produces art.
 - **`.docs/milestones/TEMPLATE.md`** — Required template for documenting completed milestones, technical decisions, lessons learned, and PM audit instructions.
 - **`.docs/milestones/`** — Contains milestone documentation created from `TEMPLATE.md` for completed roadmap phases.
 
@@ -43,6 +44,7 @@ You must build and maintain the project using a strict Three-Tiered Architecture
 - **Tier 2 (Modules):** The game's rules. This tier executes combat calculations, runs the procedural map generation algorithms, manages the 5-minute global timer, and controls AI state machines.
 - **Tier 3 (Packs):** Pure data. This tier consists of JSON files or static TypeScript objects. It defines the stats of an "Iron Sword", the spawn weight of a "Goblin", and the tile IDs for a "Boss Arena".
 - **Zero Hardcoding:** No magic numbers. No hardcoded logic. Every mechanic must be driven by data.
+- **Fixed Art Resolution:** All art is authored at 64 x 64 pixels, one sprite to one world tile, placed at 1:1 with no scaling. Larger entities are whole multiples of a tile. Camera zoom is always a whole number, textures are sampled nearest-neighbour, and the camera position snaps to whole pixels — fractional values in any of the three are what turn pixel art blurry or make it shimmer. `spriteResolution` and `tileSize` in `src/packs/World.json` state this once; never restate it as a literal elsewhere. See `.docs/ART_GUIDE.md`.
 - **Simplicity and Elegance:** Code must be elegant. Less code is always preferable to more code.
 - **Graceful Failure:** The engine must fail gracefully to maintain a stable testing environment. If an audio file is missing, log a warning; do not crash the renderer.
 
@@ -91,6 +93,7 @@ Check these at the end of every epic. Each one was a real drift found in the Epi
 
 - **No Tier 2 module imports `pixi.js`.** Rendering is Tier 1's job. Tier 2 describes what a thing is; Tier 1 decides how it is drawn. (Test files may import whatever they need to build a fixture.)
 - **No magic numbers outside Tier 3.** Speeds, sizes, colours, radii, spawn weights, tile dimensions and keybindings all belong in `src/packs/`. If a value could reasonably be tuned, it is data.
+- **No pixel literals in tests.** Fixtures derive their coordinates from `level.tileSize`, never from a hardcoded number of pixels. A suite full of pixel literals silently stops testing what it claims the moment the tile size changes — as happened when the project moved to 64 x 64 art.
 - **No game rules in `src/main.ts`.** Bootstrap wires systems together. The moment it starts deciding where things spawn or what happens on an event, that logic belongs in a Tier 2 module where it can be tested.
 - **Anything removed is destroyed.** An entity detached from the stage but never destroyed keeps its GPU resources. Measure the heap across repeated floor descents; it must not trend upward.
 - **Randomness is seeded.** Every system that rolls dice takes an injected generator. Unseeded randomness makes runs irreproducible and tests non-deterministic.

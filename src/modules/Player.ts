@@ -5,6 +5,7 @@ import { Level } from './Level';
 import { resolveMovement } from './Movement';
 import playerPack from '../packs/Player.json';
 import controls from '../packs/Controls.json';
+import world from '../packs/World.json';
 
 export interface PlayerOptions {
   level?: Level;
@@ -13,8 +14,8 @@ export interface PlayerOptions {
   speed?: number;
 }
 
-/** Size fallback for a player created without a level to scale against. */
-const FALLBACK_TILE_SIZE = 40;
+/** Tile size used when a player is created without a level to scale against. */
+const FALLBACK_TILE_SIZE = world.tileSize;
 
 /**
  * Player — the character the player drives.
@@ -42,6 +43,10 @@ export class Player extends Entity {
     options: PlayerOptions = {},
   ) {
     const tileSize = options.level?.tileSize ?? FALLBACK_TILE_SIZE;
+
+    // The collision box is deliberately a fraction of the sprite. A 64x64
+    // character sprite that collided across its full width could not fit
+    // anywhere its art suggests it should; the box represents the feet.
     const size = options.size ?? Math.round(tileSize * playerPack.sizeRatio);
 
     super(id, x, y, { width: size, height: size, color: parseColor(playerPack.color) });

@@ -92,9 +92,15 @@
 * *TDD Criteria:* Regression tests for every defect, each written to fail against the previous implementation.
 * *Verification:* PM follows the audit steps in `.docs/milestones/phase-11.5.md`.
 
+### Settled: Art Resolution
+
+Sprite resolution is fixed at **64 x 64 pixels**, one sprite to one world tile. The world grid stays 160 x 160 tiles, which at 64-pixel tiles is 10,240 pixels square. Player speed was rescaled from 200 to 320 pixels per second so that movement stays at 5 tiles per second — an identical feel, expressed in the new units.
+
+The full specification is `.docs/ART_GUIDE.md`. The rendering work this implies is Epic 4.5 above.
+
 ### Open Decision: World Scale
 
-The world is a bounded grid, not an endless one. Phase 11.5 enlarged it from 4,000 to 6,400 pixels square, which puts the staircase roughly twenty seconds of running away in a straight line before any exploration. Epic 4 gives the player three hundred seconds.
+The world is a bounded grid, not an endless one. It is 160 x 160 tiles, which at 64-pixel tiles is 10,240 pixels square, and puts the staircase roughly twenty seconds of running away in a straight line before any exploration. Epic 4 gives the player three hundred seconds. (Moving to 64-pixel art did not change this: the grid is the same number of tiles and the player covers the same tiles per second.)
 
 Whether that is the right shape for the game is a PM decision, not a technical one, and it should be settled before Epic 4 is designed:
 
@@ -132,30 +138,59 @@ Whether that is the right shape for the game is a PM decision, not a technical o
 * *Objective:* Execute the mandatory phase-based cleanup. Profile for memory leaks and ensure AABB collision logic is optimized.
 * *Checklist:* Run the architectural tripwires in `AGENTS.md` §7 — no Tier 2 module importing `pixi.js`, no magic numbers outside Tier 3, no game rules in `main.ts`, nothing removed without being destroyed, and all randomness seeded. Measure the heap across fifty floor descents and confirm it does not trend upward.
 
+## EPIC 4.5: Pixel Art Rendering Pipeline
+
+*Inserted after the art resolution was fixed at 64 x 64. These phases must complete before Epic 5, because the moment enemies exist they will need sprites, and every entity built before the pipeline exists is one that has to be retrofitted afterwards. Specification: `.docs/ART_GUIDE.md`.*
+
+- **Phase 16: Pixel-Perfect Rendering Foundation**
+
+* *Objective:* Make the renderer preserve authored pixels exactly. Sample textures nearest-neighbour rather than smoothing them, support a whole-number camera zoom, and snap the camera position to whole pixels so the world does not shimmer as the player moves. No art is introduced in this phase; it prepares the surface that art will land on.
+* *Tier Impacted:* Tier 1 (Engine).
+* *TDD Criteria:* The camera pivot resolves to whole pixels at every zoom level and every fractional player position. A non-integer zoom is rejected. Texture sampling defaults to nearest-neighbour.
+* *Verification:* PM runs window.audit.setZoom(2) and confirms the view doubles cleanly with no blurring, then walks around and confirms no shimmering or crawling along tile edges.
+
+- **Phase 17: Sprite Loading & the Tier 3 Art Pack**
+
+* *Objective:* Load 64 x 64 sprites declared in Tier 3 and draw entities and tiles with them instead of flat coloured rectangles. Missing art must fall back to the current coloured placeholder with a console warning rather than crashing, per the Graceful Failure rule.
+* *Tier Impacted:* Tier 1 & Tier 3.
+* *TDD Criteria:* An entity resolves its art from a Tier 3 declaration; a declaration pointing at missing art yields a placeholder and a warning, not an exception. A sprite whose dimensions are not a whole multiple of the tile size is rejected at load.
+* *Verification:* PM sees drawn tiles and a drawn character in place of coloured squares, and window.audit.spawnTestSquare() still works.
+
+- **Phase 18: Sprite Animation**
+
+* *Objective:* Play frame sequences (idle, walk, and later attack) declared in Tier 3, advanced by the fixed-timestep loop so playback is identical on any machine.
+* *Tier Impacted:* Tier 1 & Tier 3.
+* *TDD Criteria:* An animation advances by a deterministic number of frames per fixed step; the same elapsed time always produces the same frame regardless of how it was divided into updates.
+* *Verification:* PM watches the character animate while walking and rest on an idle frame when stopped.
+
+- **Phase 19: EPIC 4.5 Art Pipeline Checkpoint**
+
+* *Objective:* Confirm the pipeline holds before combat multiplies the asset count. Verify no non-integer scaling anywhere in the render path, measure texture memory across floor descents, and confirm the placeholder fallback still works for every entity type.
+
 ## EPIC 5: Combat Systems & Entity AI
 
-- **Phase 16: Health, Damage, & Stats Framework**
+- **Phase 20: Health, Damage, & Stats Framework**
 
 * *Objective:* Implement base stats and a unified damage application method for all entities.
 * *Tier Impacted:* Tier 2 (Modules).
 * *TDD Criteria:* Damage application accurately reduces Health; dropping below zero triggers entity destruction.
 * *Verification:* PM runs window.audit.damagePlayer(10) and sees health decrease on UI.
 
-- **Phase 17: Standard Enemy Definitions & Spawning**
+- **Phase 21: Standard Enemy Definitions & Spawning**
 
 * *Objective:* Define standard enemies using JSON in Tier 3 (Packs) and implement dynamic spawning across the floor based on density rules.
 * *Tier Impacted:* Tier 2 & Tier 3.
 * *TDD Criteria:* Spawner reads Tier 3 JSON and instantiates entities with correct stats.
 * *Verification:* PM explores the map and observes standard enemy sprites.
 
-- **Phase 18: Enemy Aggro Radius & Pathfinding**
+- **Phase 22: Enemy Aggro Radius & Pathfinding**
 
 * *Objective:* Enemies detect the player within a set radius and move toward them.
 * *Tier Impacted:* Tier 2 (Modules).
 * *TDD Criteria:* State machine shifts from IDLE to AGGRO when player enters radius.
 * *Verification:* PM steps near an enemy and verifies they are chased.
 
-- **Phase 19: Player Combat Mechanics (Melee & Ranged)**
+- **Phase 23: Player Combat Mechanics (Melee & Ranged)**
 
 * *Objective:* Allow the player to attack using predefined weapon archetypes, spawning hitboxes or projectiles.
 * *Tier Impacted:* Tier 2 (Modules).
@@ -164,28 +199,28 @@ Whether that is the right shape for the game is a PM decision, not a technical o
 
 ## EPIC 6: Loot Generation & Economy Math
 
-- **Phase 20: Item Generation & Rarity Multipliers**
+- **Phase 24: Item Generation & Rarity Multipliers**
 
 * *Objective:* Build the Tier 2 item generator. Implement ARPG multiplicative scaling math based on item level and rarity (e.g., Legendary = 3x base stats).
 * *Tier Impacted:* Tier 2 & Tier 3.
 * *TDD Criteria:* A Level 5 Legendary item outputs strictly higher mathematical stats than a Level 1 Common item according to the formulas.
 * *Verification:* PM runs window.audit.spawnLoot() and evaluates the printed stat blocks.
 
-- **Phase 21: Affix Generator**
+- **Phase 25: Affix Generator**
 
 * *Objective:* Apply chaotic game-changing effects to items based strictly on rarity tier (Common = 0, Rare = 2, Legendary = 4).
 * *Tier Impacted:* Tier 2 & Tier 3.
 * *TDD Criteria:* Generator enforces exact affix counts based on the rarity enum.
 * *Verification:* PM generates a Legendary item and verifies it has exactly 4 affixes.
 
-- **Phase 22: Dropping & Looting Logic**
+- **Phase 26: Dropping & Looting Logic**
 
 * *Objective:* Enemies drop loot upon death. Players can walk over items to pick them up.
 * *Tier Impacted:* Tier 2 (Modules).
 * *TDD Criteria:* Collision with a loot entity removes it from the world array and pushes it to the player inventory array.
 * *Verification:* PM kills an enemy, sees the item sprite, and walks over it to collect it.
 
-- **Phase 23: Inventory Menu & Equipping**
+- **Phase 27: Inventory Menu & Equipping**
 
 * *Objective:* Build the UI to equip loot. Ensure opening the menu pauses the global timer.
 * *Tier Impacted:* UI & Tier 2.
@@ -194,21 +229,21 @@ Whether that is the right shape for the game is a PM decision, not a technical o
 
 ## EPIC 7: Safe Zones (Cities)
 
-- **Phase 24: City Prefab Injection**
+- **Phase 28: City Prefab Injection**
 
 * *Objective:* Modify the map generator to occasionally carve out a predefined "Safe Zone" room.
 * *Tier Impacted:* Tier 2 & Tier 3.
 * *TDD Criteria:* City tiles are successfully flagged in the data grid as IS_SAFE_ZONE.
 * *Verification:* PM uses window.audit.teleportToCity() to verify the visual room layout.
 
-- **Phase 25: City De-Aggro AI Directives**
+- **Phase 29: City De-Aggro AI Directives**
 
 * *Objective:* When the player's coordinate is inside a safe zone, all enemies must instantly drop aggro and flee.
 * *Tier Impacted:* Tier 2 (Modules).
 * *TDD Criteria:* Player intersecting safe zone tile forces all active enemy states to FLEE.
 * *Verification:* PM aggros an enemy outside the city, runs inside, and verifies the enemy retreats.
 
-- **Phase 26: Economy & Vendor NPCs**
+- **Phase 30: Economy & Vendor NPCs**
 
 * *Objective:* Introduce currency drops and a vendor inside the city allowing the player to buy/sell items.
 * *Tier Impacted:* Tier 2 (Modules).
@@ -217,21 +252,21 @@ Whether that is the right shape for the game is a PM decision, not a technical o
 
 ## EPIC 8: Boss Encounters & Arena Logic
 
-- **Phase 27: Boss Arena Generation**
+- **Phase 31: Boss Arena Generation**
 
 * *Objective:* Inject a locked boss room prefab containing a demo boss and an attached treasure room.
 * *Tier Impacted:* Tier 2 & Tier 3.
 * *TDD Criteria:* Room generates with a distinct entryway and attached treasure room boundaries.
 * *Verification:* PM uses window.audit.teleportToBoss().
 
-- **Phase 28: Spatial Door Locking & Neutral State**
+- **Phase 32: Spatial Door Locking & Neutral State**
 
 * *Objective:* The Boss remains entirely neutral until the player steps inside. Entering the room instantly converts the door tiles to impassable walls.
 * *Tier Impacted:* Tier 2 (Modules).
 * *TDD Criteria:* Player intersecting the threshold triggers tile mutation and shifts Boss to AGGRO.
 * *Verification:* PM walks into the room, is physically trapped by new walls, and the boss attacks.
 
-- **Phase 29: Defeat Triggers & Treasure Rewards**
+- **Phase 33: Defeat Triggers & Treasure Rewards**
 
 * *Objective:* Killing the boss destroys the wall tiles blocking the treasure room, which contains highly weighted loot.
 * *Tier Impacted:* Tier 2 (Modules).
@@ -240,27 +275,27 @@ Whether that is the right shape for the game is a PM decision, not a technical o
 
 ## EPIC 9: Character Progression
 
-- **Phase 30: XP & Leveling Framework**
+- **Phase 34: XP & Leveling Framework**
 
 * *Objective:* Enemies grant XP. Reaching mathematical thresholds increments the Player Level.
 * *Tier Impacted:* Tier 2 (Modules).
 * *TDD Criteria:* XP threshold formula calculates correctly; level increments upon XP exceeding threshold.
 * *Verification:* PM kills an enemy and observes the level/XP bar increase.
 
-- **Phase 31: Dual Point System**
+- **Phase 35: Dual Point System**
 
 * *Objective:* Leveling up grants 1 Attribute Point and 1 Skill Point.
 * *Tier Impacted:* Tier 2 (Modules).
 * *TDD Criteria:* Level increment event accurately dispatches additions to both point pools.
 * *Verification:* Automated tests pass.
 
-- **Phase 32: Attribute & Skill Allocation Menus**
+- **Phase 36: Attribute & Skill Allocation Menus**
 
 * *Objective:* Build the UI allowing the player to spend Attribute points on base stats and Skill points on a structured node tree.
 * *Tier Impacted:* UI & Tier 2.
 * *TDD Criteria:* Spending points deducts total and permanently applies stat modifiers.
 * *Verification:* PM opens the menu, spends points, and validates increased stats.
 
-- **Phase 33: Final Polish & Architectural Audit**
+- **Phase 37: Final Polish & Architectural Audit**
 
 * *Objective:* AI conducts a comprehensive code review across all tiers to enforce strict adherence to specifications prior to version 1.0 release.

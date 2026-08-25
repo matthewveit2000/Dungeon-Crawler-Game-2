@@ -62,6 +62,40 @@ if (mainLines > MAIN_MAX_LINES) {
   );
 }
 
+// --- Art resolution is stated once, in Tier 3 -------------------------------
+const world = JSON.parse(readFileSync('src/packs/World.json', 'utf8'));
+if (world.tileSize !== world.spriteResolution) {
+  failures.push(
+    `World.json tileSize (${world.tileSize}) must equal spriteResolution (${world.spriteResolution}). ` +
+      'A mismatch forces every sprite to be scaled by a fraction, which is what destroys pixel art.',
+  );
+}
+for (const file of sourceFiles('src')) {
+  const text = readFileSync(file, 'utf8');
+  // Restating the resolution as a literal is how the number drifts out of sync.
+  if (/(?<![.\w])(?:64|tileSize)\s*[*/]\s*(?:64)(?![.\w])/.test(text)) {
+    failures.push(
+      `${relative('.', file)} appears to hardcode the sprite resolution. ` +
+        'Read it from World.json instead.',
+    );
+  }
+}
+
+// --- Tests must not hardcode pixel coordinates ------------------------------
+for (const dir of ['src/modules', 'src/engine']) {
+  for (const entry of readdirSync(dir).filter((f) => f.endsWith('.test.ts'))) {
+    const text = readFileSync(join(dir, entry), 'utf8');
+    // A fixture built from the old 40px tile size stops testing what it claims
+    // the moment the tile size changes, and does so silently.
+    if (/from:\s*\{\s*x:\s*\d{2,}/.test(text)) {
+      failures.push(
+        `${dir}/${entry} builds a fixture from hardcoded pixel coordinates. ` +
+          'Derive them from level.tileSize so a change of scale cannot invalidate the test.',
+      );
+    }
+  }
+}
+
 // --- Tier 3 holds the content data ------------------------------------------
 const packs = readdirSync('src/packs').filter((f) => f.endsWith('.json'));
 if (packs.length === 0) {

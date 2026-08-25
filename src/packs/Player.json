@@ -1,6 +1,6 @@
 {
-  "speed": 200,
+  "speed": 320,
   "sizeRatio": 0.25,
   "color": "0x35d94a",
-  "interactRadius": 60
+  "interactRadius": 96
 }

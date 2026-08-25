@@ -117,14 +117,18 @@ describe('Player', () => {
   });
 
   describe('collision', () => {
+    // Positions come from the level's own tile geometry, never raw pixels.
     it('is blocked by a wall', () => {
       const level = levelWith([
         [1, 1],
         [1, 2],
       ]);
-      const player = new Player('p', 60, 60, withKeys({ a: true }), { level });
+      const start = level.tileCenter(1, 1);
+      const player = new Player('p', start.x, start.y, withKeys({ a: true }), { level });
+
       runOneSecond(player);
-      expect(player.x).toBeGreaterThan(40);
+
+      expect(player.x).toBeGreaterThan(level.tileSize);
       expect(level.isCollidingWithWall(player.x, player.y, player.width, player.height)).toBe(
         false,
       );
@@ -135,9 +139,12 @@ describe('Player', () => {
         [1, 1],
         [1, 2],
       ]);
-      const player = new Player('p', 60, 60, withKeys({ s: true }), { level });
+      const start = level.tileCenter(1, 1);
+      const player = new Player('p', start.x, start.y, withKeys({ s: true }), { level });
+
       for (let i = 0; i < 6; i++) player.update(STEP);
-      expect(player.y).toBeGreaterThan(60);
+
+      expect(player.y).toBeGreaterThan(start.y);
     });
 
     it('never ends a frame inside a wall, whatever direction it is pushed', () => {
@@ -145,7 +152,8 @@ describe('Player', () => {
         [1, 1],
         [2, 1],
         [1, 2],
-      ]); // (2,2) is the corner.
+      ]); // (2,2) is the inside corner.
+      const start = level.tileCenter(1, 1);
       const combos: Record<string, boolean>[] = [
         { w: true },
         { s: true },
@@ -158,7 +166,7 @@ describe('Player', () => {
       ];
 
       for (const keys of combos) {
-        const player = new Player('p', 60, 60, withKeys(keys), { level });
+        const player = new Player('p', start.x, start.y, withKeys(keys), { level });
         for (let i = 0; i < 120; i++) {
           player.update(STEP);
           expect(level.isCollidingWithWall(player.x, player.y, player.width, player.height)).toBe(
@@ -175,7 +183,8 @@ describe('Player', () => {
         [2, 1],
         [1, 2],
       ]);
-      const pusher = new Player('p', 60, 60, withKeys({ s: true, d: true }), { level });
+      const start = level.tileCenter(1, 1);
+      const pusher = new Player('p', start.x, start.y, withKeys({ s: true, d: true }), { level });
       for (let i = 0; i < 120; i++) pusher.update(STEP);
 
       const directions: Record<string, boolean>[] = [
@@ -200,9 +209,12 @@ describe('Player', () => {
         [1, 1],
         [3, 1],
       ]); // (2,1) is solid.
-      const player = new Player('p', 60, 60, withKeys({ d: true }), { level });
-      player.update(0.5); // A stalled frame: 100px in one go.
-      expect(player.x).toBeLessThan(80);
+      const start = level.tileCenter(1, 1);
+      const player = new Player('p', start.x, start.y, withKeys({ d: true }), { level });
+
+      player.update(0.5); // A stalled frame.
+
+      expect(player.x).toBeLessThan(level.tileSize * 2);
     });
   });
 

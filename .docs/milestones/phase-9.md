@@ -11,7 +11,7 @@ Implemented `MapGenerator` in Tier 2 (Modules). It utilizes a random walk algori
 **Extended in Phase 11.5.** Three changes:
 
 - The generator now takes an injected seeded random number generator instead of calling the browser's randomness directly, so the same seed always builds the same floor. This makes reported problems reproducible and lets the tests assert on generated maps.
-- The walker carves with a brush several tiles wide rather than a single tile. One-tile corridors are technically navigable but demand near-perfect alignment to enter, which made moving around feel far worse than it needed to.
+- The walker gained a configurable brush width. At the 40-pixel tiles of the time, one-tile corridors were tight enough to make moving around feel worse than it needed to, so the brush was widened to three tiles. Phase 11.6 returned it to a single tile once the move to 64-pixel art made a one-tile corridor four times the player's collision box — the tile size now does the work the brush was doing.
 - Floor parameters — grid size, step count, brush width, colours — moved to `src/packs/World.json`.
 
 ## 3. Lessons Learned

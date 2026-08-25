@@ -10,6 +10,8 @@ import { Level } from './modules/Level';
 import { TileType } from './modules/MapGenerator';
 import { FloorManager } from './modules/FloorManager';
 import { TestSquare } from './modules/TestSquare';
+import { Timer } from './modules/Timer';
+import { TimerOverlay } from './engine/TimerOverlay';
 import world from './packs/World.json';
 
 /** Console helpers the PM uses to verify each phase by hand. */
@@ -24,6 +26,7 @@ interface AuditToolkit {
   getSeed(): number;
   setSeed(seed: number): string;
   getFloorStats(): Record<string, number>;
+  setTimer(seconds: number): string;
 }
 
 declare global {
@@ -71,6 +74,10 @@ async function bootstrap(): Promise<void> {
   });
   renderer.ui.addChild(overlay.view);
 
+  const timer = new Timer();
+  const timerOverlay = new TimerOverlay({ screenWidth: renderer.screenWidth });
+  renderer.ui.addChild(timerOverlay.view);
+
   const level = new Level();
   const floors = new FloorManager(level, entityManager, inputManager, (built) => {
     tileRenderer.render(built.grid);
@@ -85,12 +92,16 @@ async function bootstrap(): Promise<void> {
 
   window.addEventListener('resize', () => {
     camera.resize(renderer.screenWidth, renderer.screenHeight);
+    timerOverlay.resize(renderer.screenWidth);
     if (overlay.isVisible) {
       overlay.show(level.grid, renderer.screenWidth, renderer.screenHeight);
     }
   });
 
   gameLoop.start((dt) => {
+    timer.update(dt);
+    timerOverlay.updateTime(timer.toDisplayString());
+
     entityManager.update(dt);
     // Applied after entity updates, so a descent never tears down an entity
     // that is still mid-update.
@@ -150,6 +161,11 @@ async function bootstrap(): Promise<void> {
       floors.restartFromSeed(seed);
       camera.setTarget(floors.getPlayer()!);
       return `Run restarted from seed ${seed}. The same seed always builds the same floor.`;
+    },
+
+    setTimer: (seconds: number) => {
+      timer.setTime(seconds);
+      return `Global timer set to ${seconds} seconds.`;
     },
 
     getFloorStats: () => {

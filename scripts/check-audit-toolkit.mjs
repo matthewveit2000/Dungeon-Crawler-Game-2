@@ -23,6 +23,7 @@ const REQUIRED_COMMANDS = [
   'getSeed',
   'setSeed',
   'getFloorStats',
+  'setTimer',
 ];
 
 const DIST = 'dist/assets';

@@ -6,6 +6,8 @@ import { TestSquare } from './modules/TestSquare';
 import { Player } from './modules/Player';
 import { Camera } from './engine/Camera';
 import { Graphics } from 'pixi.js';
+import { MapGrid } from './modules/MapGrid';
+import { MapGenerator, TileType } from './modules/MapGenerator';
 
 // Define the audit interface for the global window object
 declare global {
@@ -96,6 +98,32 @@ async function bootstrap() {
     },
     getFPS: () => {
       return gameLoop.getFPS();
+    },
+    zoomOutMap: () => {
+      const grid = new MapGrid<TileType>(200, 200, TileType.WALL);
+      MapGenerator.generateRandomWalk(grid, 15000);
+
+      const mapGraphics = new Graphics();
+      const tileSize = 4; // 4x4 pixels per tile
+
+      for (let y = 0; y < grid.height; y++) {
+        for (let x = 0; x < grid.width; x++) {
+          if (grid.get(x, y) === TileType.FLOOR) {
+            mapGraphics.rect(x * tileSize, y * tileSize, tileSize, tileSize);
+            mapGraphics.fill(0xaaaaaa); // Light gray for floor
+          } else {
+            mapGraphics.rect(x * tileSize, y * tileSize, tileSize, tileSize);
+            mapGraphics.fill(0x333333); // Dark gray for wall
+          }
+        }
+      }
+
+      // Center the map graphic on the screen
+      mapGraphics.x = (renderer.app.renderer.width - (200 * tileSize)) / 2;
+      mapGraphics.y = (renderer.app.renderer.height - (200 * tileSize)) / 2;
+
+      renderer.app.stage.addChild(mapGraphics);
+      console.log('Macro-scale map generated and rendered to stage.');
     }
   };
 

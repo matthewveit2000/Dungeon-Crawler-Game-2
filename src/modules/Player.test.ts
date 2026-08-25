@@ -61,6 +61,17 @@ describe('Player', () => {
     expect(player.width).toBe(player.height);
   });
 
+  it('starts with 100 health by default', () => {
+    const player = new Player('p', 60, 60, inputManager);
+    expect(player.health).toBe(100);
+  });
+
+  it('zeroes health when die is called', () => {
+    const player = new Player('p', 60, 60, inputManager);
+    player.die();
+    expect(player.health).toBe(0);
+  });
+
   describe('movement', () => {
     const cases: [string, string, number, number][] = [
       ['up', 'w', 0, -1],

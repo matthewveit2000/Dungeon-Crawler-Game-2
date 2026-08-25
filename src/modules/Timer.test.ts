@@ -37,4 +37,35 @@ describe('Timer', () => {
     expect(timer.remainingSeconds).toBe(10);
     expect(timer.toDisplayString()).toBe('0:10');
   });
+
+  it('fires the onZero callback exactly once when time runs out', () => {
+    const timer = new Timer(5);
+    let firedCount = 0;
+    timer.setOnZeroCallback(() => {
+      firedCount++;
+    });
+
+    timer.update(4);
+    expect(firedCount).toBe(0);
+
+    timer.update(2); // Goes to 0
+    expect(firedCount).toBe(1);
+
+    timer.update(1); // Already 0
+    expect(firedCount).toBe(1);
+  });
+
+  it('fires the onZero callback exactly once when setTime(0) is called', () => {
+    const timer = new Timer(5);
+    let firedCount = 0;
+    timer.setOnZeroCallback(() => {
+      firedCount++;
+    });
+
+    timer.setTime(0);
+    expect(firedCount).toBe(1);
+
+    timer.setTime(0);
+    expect(firedCount).toBe(1);
+  });
 });

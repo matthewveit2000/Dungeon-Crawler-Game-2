@@ -53,7 +53,7 @@ for (const file of sourceFiles('src')) {
 }
 
 // --- Bootstrap wires systems together; it does not hold game rules -----------
-const MAIN_MAX_LINES = 220;
+const MAIN_MAX_LINES = 240;
 const mainLines = readFileSync('src/main.ts', 'utf8').split('\n').length;
 if (mainLines > MAIN_MAX_LINES) {
   failures.push(

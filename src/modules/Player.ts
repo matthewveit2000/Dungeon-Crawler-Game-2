@@ -26,6 +26,7 @@ const FALLBACK_TILE_SIZE = world.tileSize;
  */
 export class Player extends Entity {
   public readonly speed: number;
+  public health: number = 100;
 
   private readonly inputManager: InputManager;
   private readonly level?: Level;
@@ -67,6 +68,10 @@ export class Player extends Entity {
 
   public setInteractionCallback(callback: () => void): void {
     this.onInteract = callback;
+  }
+
+  public die(): void {
+    this.health = 0;
   }
 
   public update(dt: number): void {

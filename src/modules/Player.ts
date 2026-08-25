@@ -15,8 +15,8 @@ export class Player extends Entity {
   constructor(id: string, x: number, y: number, inputManager: InputManager, level?: Level) {
     super(id, x, y);
     this.level = level;
-    this.width = 30;
-    this.height = 30;
+    this.width = 20;
+    this.height = 20;
     this.inputManager = inputManager;
 
     this.graphics = new Graphics();

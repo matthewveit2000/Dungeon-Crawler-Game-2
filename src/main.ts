@@ -9,11 +9,12 @@ import { Graphics } from 'pixi.js';
 import { MapGrid } from './modules/MapGrid';
 import { MapGenerator, TileType } from './modules/MapGenerator';
 import { Level } from './modules/Level';
+import { Staircase } from './modules/Staircase';
 
 // Define the audit interface for the global window object
 declare global {
   interface Window {
-    audit: any;
+    audit: any; // Keep 'any' or strictly define the interface. Using 'any' as it seems there are multiple dynamically added properties.
   }
 }
 
@@ -80,7 +81,92 @@ async function bootstrap() {
       const player = new Player('player-1', centerX, centerY, inputManager, level);
       entityManager.addEntity(player);
       camera.setTarget(player);
+
+      // Spawn staircase far away
+      let staircaseX = 0;
+      let staircaseY = 0;
+      let maxDist = 0;
+
+      for (let y = 0; y < level.grid.height; y++) {
+        for (let x = 0; x < level.grid.width; x++) {
+          if (level.grid.get(x, y) === TileType.FLOOR) {
+            const worldX = x * level.tileSize + level.tileSize / 2;
+            const worldY = y * level.tileSize + level.tileSize / 2;
+            const dx = worldX - centerX;
+            const dy = worldY - centerY;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+
+            if (dist > maxDist) {
+              maxDist = dist;
+              staircaseX = worldX;
+              staircaseY = worldY;
+            }
+          }
+        }
+      }
+
+      const staircase = new Staircase('staircase-1', staircaseX, staircaseY);
+      entityManager.addEntity(staircase);
+      player.setStaircase(staircase);
+
+      player.setInteractionCallback(() => {
+        console.log('Staircase interacted! Regenerating level...');
+        level.regenerate();
+
+        // Find new positions for player and staircase
+        const newCenterX = Math.floor(level.grid.width / 2) * level.tileSize + level.tileSize / 2;
+        const newCenterY = Math.floor(level.grid.height / 2) * level.tileSize + level.tileSize / 2;
+
+        player.x = newCenterX;
+        player.y = newCenterY;
+        player.sprite.x = newCenterX;
+        player.sprite.y = newCenterY;
+
+        let newStaircaseX = 0;
+        let newStaircaseY = 0;
+        let newMaxDist = 0;
+
+        for (let y = 0; y < level.grid.height; y++) {
+          for (let x = 0; x < level.grid.width; x++) {
+            if (level.grid.get(x, y) === TileType.FLOOR) {
+              const worldX = x * level.tileSize + level.tileSize / 2;
+              const worldY = y * level.tileSize + level.tileSize / 2;
+              const dx = worldX - newCenterX;
+              const dy = worldY - newCenterY;
+              const dist = Math.sqrt(dx * dx + dy * dy);
+
+              if (dist > newMaxDist) {
+                newMaxDist = dist;
+                newStaircaseX = worldX;
+                newStaircaseY = worldY;
+              }
+            }
+          }
+        }
+
+        staircase.x = newStaircaseX;
+        staircase.y = newStaircaseY;
+        staircase.sprite.x = newStaircaseX;
+        staircase.sprite.y = newStaircaseY;
+
+        console.log(`Level regenerated. Player at (${newCenterX}, ${newCenterY}), Staircase at (${newStaircaseX}, ${newStaircaseY}).`);
+      });
+
       console.log(`Player spawned via EntityManager at (${centerX}, ${centerY}). Camera tracking engaged. Use WASD to move.`);
+    },
+    teleportToStairs: () => {
+      const playerEntity = entityManager.getEntities().find(e => e.id === 'player-1');
+      const staircaseEntity = entityManager.getEntities().find(e => e.id === 'staircase-1');
+
+      if (playerEntity && staircaseEntity) {
+        playerEntity.x = staircaseEntity.x;
+        playerEntity.y = staircaseEntity.y;
+        playerEntity.sprite.x = staircaseEntity.x;
+        playerEntity.sprite.y = staircaseEntity.y;
+        console.log(`Player teleported to stairs at (${staircaseEntity.x}, ${staircaseEntity.y}). Press 'e' to interact.`);
+      } else {
+        console.error('Player or Staircase not found in EntityManager. Call window.audit.spawnPlayer() first.');
+      }
     },
 
     getRendererDimensions: () => {

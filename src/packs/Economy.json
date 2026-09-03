@@ -1,0 +1,41 @@
+{
+  "currency": "Gold",
+  "dropRange": {
+    "min": 5,
+    "max": 15
+  },
+  "sellPrices": {
+    "common": 10,
+    "uncommon": 25,
+    "rare": 60,
+    "legendary": 150
+  },
+  "vendorStock": [
+    {
+      "id": "potion_health",
+      "name": "Health Potion",
+      "cost": 25,
+      "type": "potion",
+      "healAmount": 50
+    },
+    {
+      "id": "vendor_blade",
+      "name": "Mercenary Blade",
+      "cost": 50,
+      "type": "equipment",
+      "slot": "weapon",
+      "rarity": "uncommon",
+      "damage": 22
+    },
+    {
+      "id": "vendor_mail",
+      "name": "Hardened Chainmail",
+      "cost": 75,
+      "type": "equipment",
+      "slot": "armor",
+      "rarity": "uncommon",
+      "defense": 12,
+      "healthBonus": 30
+    }
+  ]
+}

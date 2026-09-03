@@ -37,6 +37,38 @@ describe('TileRenderer', () => {
     renderer.destroy();
     expect(renderer.view.destroyed).toBe(true);
   });
+
+  it('renders tiles with registered textures from AssetLoader', async () => {
+    const { AssetLoader } = await import('./AssetLoader');
+    const { Texture, TextureSource } = await import('pixi.js');
+    const source = new TextureSource({ width: 32, height: 32 });
+    const texture = new Texture({ source });
+    AssetLoader.register('floor-tile', texture, 32);
+
+    const renderer = new TileRenderer({
+      tileSize: 32,
+      palette: [0x000000, 0xffffff],
+      sprites: [undefined, 'floor-tile'],
+    });
+
+    expect(() => renderer.render(gridFrom(['01', '10']))).not.toThrow();
+  });
+
+  it('falls back to palette colour and logs warning when a tile sprite is missing', async () => {
+    const { vi } = await import('vitest');
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    const renderer = new TileRenderer({
+      tileSize: 32,
+      palette: [0x000000, 0xffffff],
+      sprites: [undefined, 'missing-tile-sprite'],
+    });
+
+    expect(() => renderer.render(gridFrom(['01']))).not.toThrow();
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('missing-tile-sprite'));
+
+    warnSpy.mockRestore();
+  });
 });
 
 describe('MapOverlay', () => {

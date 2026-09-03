@@ -142,160 +142,163 @@ Whether that is the right shape for the game is a PM decision, not a technical o
 
 *Inserted after the art resolution was settled, and retargeted to 32 x 32 in Phase 11.7. These phases must complete before Epic 5, because the moment enemies exist they will need sprites, and every entity built before the pipeline exists is one that has to be retrofitted afterwards. Specification: `.docs/ART_GUIDE.md`.*
 
-- **Phase 16: Pixel-Perfect Rendering Foundation**
+- **Phase 16: Pixel-Perfect Rendering Foundation** *(complete)*
 
 * *Objective:* Make the renderer preserve authored pixels exactly. Sample textures nearest-neighbour rather than smoothing them, support a whole-number camera zoom applied from `defaultZoom` in `World.json`, and snap the camera position to whole pixels so the world does not shimmer as the player moves. No art is introduced in this phase; it prepares the surface that art will land on.
 * *Tier Impacted:* Tier 1 (Engine).
 * *TDD Criteria:* The camera pivot resolves to whole pixels at every zoom level and every fractional player position. A non-integer zoom is rejected. Texture sampling defaults to nearest-neighbour.
-* *Verification:* PM confirms the game opens at the default 2x zoom showing about 20 tiles across, runs window.audit.setZoom(4) and confirms the view doubles cleanly with no blurring, then walks around and confirms no shimmering or crawling along tile edges.
+* *Verification:* PM confirms the game opens at the default 2x zoom showing about 20 tiles across, runs window.audit.setZoom(4) and confirms the view doubles cleanly with no blurring, then walks around and confirms no shimmering or crawling along tile edges. See `.docs/milestones/phase-16.md`.
 
-- **Phase 17: Sprite Loading & the Tier 3 Art Pack**
+- **Phase 17: Sprite Loading & the Tier 3 Art Pack** *(complete)*
 
 * *Objective:* Load 32 x 32 sprites declared in Tier 3 and draw entities and tiles with them instead of flat coloured rectangles. Missing art must fall back to the current coloured placeholder with a console warning rather than crashing, per the Graceful Failure rule.
 * *Tier Impacted:* Tier 1 & Tier 3.
 * *TDD Criteria:* An entity resolves its art from a Tier 3 declaration; a declaration pointing at missing art yields a placeholder and a warning, not an exception. A sprite whose dimensions are not a whole multiple of the tile size is rejected at load.
-* *Verification:* PM sees drawn tiles and a drawn character in place of coloured squares, and window.audit.spawnTestSquare() still works.
+* *Verification:* PM sees drawn tiles and a drawn character in place of coloured squares, and window.audit.spawnTestSquare() still works. See `.docs/milestones/phase-17.md`.
 
-- **Phase 18: Sprite Animation**
+- **Phase 18: Sprite Animation** *(complete)*
 
 * *Objective:* Play frame sequences (idle, walk, and later attack) declared in Tier 3, advanced by the fixed-timestep loop so playback is identical on any machine.
 * *Tier Impacted:* Tier 1 & Tier 3.
 * *TDD Criteria:* An animation advances by a deterministic number of frames per fixed step; the same elapsed time always produces the same frame regardless of how it was divided into updates.
-* *Verification:* PM watches the character animate while walking and rest on an idle frame when stopped.
+* *Verification:* PM watches the character animate while walking and rest on an idle frame when stopped. See `.docs/milestones/phase-18.md`.
 
-- **Phase 19: EPIC 4.5 Art Pipeline Checkpoint**
+- **Phase 19: EPIC 4.5 Art Pipeline Checkpoint** *(complete)*
 
-* *Objective:* Confirm the pipeline holds before combat multiplies the asset count. Verify no non-integer scaling anywhere in the render path, measure texture memory across floor descents, and confirm the placeholder fallback still works for every entity type.
+* *Objective:* Confirm the pipeline holds before combat multiplies the asset count. Verify no non-integer scaling anywhere in the render path, measure texture memory across floor descents, and confirm the placeholder fallback still works for every entity type. See `.docs/milestones/phase-19.md`.
 
 ## EPIC 5: Combat Systems & Entity AI
 
-- **Phase 20: Health, Damage, & Stats Framework**
+- **Phase 20: Health, Damage, & Stats Framework** *(complete)*
 
 * *Objective:* Implement base stats and a unified damage application method for all entities.
 * *Tier Impacted:* Tier 2 (Modules).
 * *TDD Criteria:* Damage application accurately reduces Health; dropping below zero triggers entity destruction.
-* *Verification:* PM runs window.audit.damagePlayer(10) and sees health decrease on UI.
+* *Verification:* PM runs window.audit.damagePlayer(10) and sees health decrease on UI. See `.docs/milestones/phase-20.md`.
 
-- **Phase 21: Standard Enemy Definitions & Spawning**
+- **Phase 21: Standard Enemy Definitions & Spawning** *(complete)*
 
 * *Objective:* Define standard enemies using JSON in Tier 3 (Packs) and implement dynamic spawning across the floor based on density rules.
 * *Tier Impacted:* Tier 2 & Tier 3.
 * *TDD Criteria:* Spawner reads Tier 3 JSON and instantiates entities with correct stats.
-* *Verification:* PM explores the map and observes standard enemy sprites.
+* *Verification:* PM explores the map and observes standard enemy sprites. See `.docs/milestones/phase-21.md`.
 
-- **Phase 22: Enemy Aggro Radius & Pathfinding**
+- **Phase 22: Enemy Aggro Radius & Pathfinding** *(complete)*
 
 * *Objective:* Enemies detect the player within a set radius and move toward them.
 * *Tier Impacted:* Tier 2 (Modules).
 * *TDD Criteria:* State machine shifts from IDLE to AGGRO when player enters radius.
-* *Verification:* PM steps near an enemy and verifies they are chased.
+* *Verification:* PM steps near an enemy and verifies they are chased. See `.docs/milestones/phase-22.md`.
 
-- **Phase 23: Player Combat Mechanics (Melee & Ranged)**
+- **Phase 23: Player Combat Mechanics (Melee & Ranged) - COMPLETED**
 
 * *Objective:* Allow the player to attack using predefined weapon archetypes, spawning hitboxes or projectiles.
 * *Tier Impacted:* Tier 2 (Modules).
 * *TDD Criteria:* Attack hitboxes intersecting with enemy hurtboxes successfully dispatch damage events.
-* *Verification:* PM clicks to attack and kills a pursuing enemy.
+* *Verification:* PM clicks to attack and kills a pursuing enemy. See `.docs/milestones/phase-23.md`.
 
 ## EPIC 6: Loot Generation & Economy Math
 
-- **Phase 24: Item Generation & Rarity Multipliers**
+- **Phase 24: Item Generation & Rarity Multipliers - COMPLETED**
 
 * *Objective:* Build the Tier 2 item generator. Implement ARPG multiplicative scaling math based on item level and rarity (e.g., Legendary = 3x base stats).
 * *Tier Impacted:* Tier 2 & Tier 3.
 * *TDD Criteria:* A Level 5 Legendary item outputs strictly higher mathematical stats than a Level 1 Common item according to the formulas.
-* *Verification:* PM runs window.audit.spawnLoot() and evaluates the printed stat blocks.
+* *Verification:* PM runs window.audit.spawnLoot() and evaluates the printed stat blocks. See `.docs/milestones/phase-24.md`.
 
-- **Phase 25: Affix Generator**
+- **Phase 25: Affix Generator - COMPLETED**
 
 * *Objective:* Apply chaotic game-changing effects to items based strictly on rarity tier (Common = 0, Rare = 2, Legendary = 4).
 * *Tier Impacted:* Tier 2 & Tier 3.
 * *TDD Criteria:* Generator enforces exact affix counts based on the rarity enum.
-* *Verification:* PM generates a Legendary item and verifies it has exactly 4 affixes.
+* *Verification:* PM generates a Legendary item and verifies it has exactly 4 affixes. See `.docs/milestones/phase-25.md`.
 
-- **Phase 26: Dropping & Looting Logic**
+- **Phase 26: Dropping & Looting Logic - COMPLETED**
 
 * *Objective:* Enemies drop loot upon death. Players can walk over items to pick them up.
 * *Tier Impacted:* Tier 2 (Modules).
 * *TDD Criteria:* Collision with a loot entity removes it from the world array and pushes it to the player inventory array.
-* *Verification:* PM kills an enemy, sees the item sprite, and walks over it to collect it.
+* *Verification:* PM kills an enemy, sees the item sprite, and walks over it to collect it. See `.docs/milestones/phase-26.md`.
 
-- **Phase 27: Inventory Menu & Equipping**
+- **Phase 27: Inventory Menu & Equipping - COMPLETED**
 
 * *Objective:* Build the UI to equip loot. Ensure opening the menu pauses the global timer.
 * *Tier Impacted:* UI & Tier 2.
 * *TDD Criteria:* Equipping an item successfully modifies the player's base combat stats.
-* *Verification:* PM opens inventory, equips a sword, and deals increased damage to enemies.
+* *Verification:* PM opens inventory, equips a sword, and deals increased damage to enemies. See `.docs/milestones/phase-27.md`.
 
 ## EPIC 7: Safe Zones (Cities)
 
-- **Phase 28: City Prefab Injection**
+- **Phase 28: City Prefab Injection - COMPLETED**
 
 * *Objective:* Modify the map generator to occasionally carve out a predefined "Safe Zone" room.
 * *Tier Impacted:* Tier 2 & Tier 3.
 * *TDD Criteria:* City tiles are successfully flagged in the data grid as IS_SAFE_ZONE.
-* *Verification:* PM uses window.audit.teleportToCity() to verify the visual room layout.
+* *Verification:* PM uses window.audit.teleportToCity() to verify the visual room layout. See `.docs/milestones/phase-28.md`.
 
-- **Phase 29: City De-Aggro AI Directives**
+- **Phase 29: City De-Aggro AI Directives - COMPLETED**
 
 * *Objective:* When the player's coordinate is inside a safe zone, all enemies must instantly drop aggro and flee.
 * *Tier Impacted:* Tier 2 (Modules).
 * *TDD Criteria:* Player intersecting safe zone tile forces all active enemy states to FLEE.
-* *Verification:* PM aggros an enemy outside the city, runs inside, and verifies the enemy retreats.
+* *Verification:* PM aggros an enemy outside the city, runs inside, and verifies the enemy retreats. See `.docs/milestones/phase-29.md`.
 
-- **Phase 30: Economy & Vendor NPCs**
+- **Phase 30: Economy & Vendor NPCs - COMPLETED**
 
 * *Objective:* Introduce currency drops and a vendor inside the city allowing the player to buy/sell items.
 * *Tier Impacted:* Tier 2 (Modules).
 * *TDD Criteria:* Buying an item deducts the exact currency amount; transaction fails if funds are insufficient.
-* *Verification:* PM sells loot to the vendor and buys a health potion.
+* *Verification:* PM sells loot to the vendor and buys a health potion. See `.docs/milestones/phase-30.md`.
 
 ## EPIC 8: Boss Encounters & Arena Logic
 
-- **Phase 31: Boss Arena Generation**
+- **Phase 31: Boss Arena Generation - COMPLETED**
 
 * *Objective:* Inject a locked boss room prefab containing a demo boss and an attached treasure room.
 * *Tier Impacted:* Tier 2 & Tier 3.
 * *TDD Criteria:* Room generates with a distinct entryway and attached treasure room boundaries.
-* *Verification:* PM uses window.audit.teleportToBoss().
+* *Verification:* PM uses window.audit.teleportToBoss(). See `.docs/milestones/phase-31.md`.
 
-- **Phase 32: Spatial Door Locking & Neutral State**
+- **Phase 32: Spatial Door Locking & Neutral State - COMPLETED**
 
 * *Objective:* The Boss remains entirely neutral until the player steps inside. Entering the room instantly converts the door tiles to impassable walls.
 * *Tier Impacted:* Tier 2 (Modules).
 * *TDD Criteria:* Player intersecting the threshold triggers tile mutation and shifts Boss to AGGRO.
-* *Verification:* PM walks into the room, is physically trapped by new walls, and the boss attacks.
+* *Verification:* PM walks into the room, is physically trapped by new walls, and the boss attacks. See `.docs/milestones/phase-32.md`.
 
-- **Phase 33: Defeat Triggers & Treasure Rewards**
+- **Phase 33: Defeat Triggers & Treasure Rewards - COMPLETED**
 
 * *Objective:* Killing the boss destroys the wall tiles blocking the treasure room, which contains highly weighted loot.
 * *Tier Impacted:* Tier 2 (Modules).
 * *TDD Criteria:* Boss HP hitting zero dispatches event to mutate treasure room door tiles to floor tiles.
-* *Verification:* PM kills the boss via window.audit.killTarget() and loots the adjoining room.
+* *Verification:* PM kills the boss via window.audit.killTarget() and loots the adjoining room. See `.docs/milestones/phase-33.md`.
 
 ## EPIC 9: Character Progression
 
-- **Phase 34: XP & Leveling Framework**
+- **Phase 34: XP & Leveling Framework - COMPLETED**
 
 * *Objective:* Enemies grant XP. Reaching mathematical thresholds increments the Player Level.
 * *Tier Impacted:* Tier 2 (Modules).
 * *TDD Criteria:* XP threshold formula calculates correctly; level increments upon XP exceeding threshold.
-* *Verification:* PM kills an enemy and observes the level/XP bar increase.
+* *Verification:* PM kills an enemy and observes the level/XP bar increase. See `.docs/milestones/phase-34.md`.
 
-- **Phase 35: Dual Point System**
+- **Phase 35: Dual Point System - COMPLETED**
 
 * *Objective:* Leveling up grants 1 Attribute Point and 1 Skill Point.
 * *Tier Impacted:* Tier 2 (Modules).
 * *TDD Criteria:* Level increment event accurately dispatches additions to both point pools.
-* *Verification:* Automated tests pass.
+* *Verification:* Automated tests pass. See `.docs/milestones/phase-35.md`.
 
-- **Phase 36: Attribute & Skill Allocation Menus**
+- **Phase 36: Attribute & Skill Allocation Menus - COMPLETED**
 
 * *Objective:* Build the UI allowing the player to spend Attribute points on base stats and Skill points on a structured node tree.
 * *Tier Impacted:* UI & Tier 2.
 * *TDD Criteria:* Spending points deducts total and permanently applies stat modifiers.
-* *Verification:* PM opens the menu, spends points, and validates increased stats.
+* *Verification:* PM opens the menu, spends points, and validates increased stats. See `.docs/milestones/phase-36.md`.
 
-- **Phase 37: Final Polish & Architectural Audit**
+- **Phase 37: Final Polish & Architectural Audit - COMPLETED**
 
 * *Objective:* AI conducts a comprehensive code review across all tiers to enforce strict adherence to specifications prior to version 1.0 release.
+* *Tier Impacted:* All Tiers.
+* *TDD Criteria:* Clean architectural checks, 100% test pass rate across all 37 phases, and visual screenshot verification.
+* *Verification:* Run `npm run verify` and visual audits. See `.docs/milestones/phase-37.md`.

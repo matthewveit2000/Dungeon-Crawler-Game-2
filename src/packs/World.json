@@ -5,7 +5,7 @@
     "height": 160
   },
   "tileSize": 32,
-  "defaultZoom": 2,
+  "defaultZoom": 10,
   "generation": {
     "walkSteps": 40000,
     "brushRadius": 0
@@ -13,6 +13,10 @@
   "palette": {
     "wall": "0x2b2d33",
     "floor": "0xa8a9ad"
+  },
+  "sprites": {
+    "wall": "wall",
+    "floor": "floor"
   },
   "background": "0x15161a",
   "overlay": {

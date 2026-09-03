@@ -1,0 +1,85 @@
+{
+  "affixCounts": {
+    "common": 0,
+    "uncommon": 1,
+    "rare": 2,
+    "legendary": 4
+  },
+  "pool": [
+    {
+      "id": "blazing",
+      "name": "Blazing",
+      "type": "prefix",
+      "description": "Attacks scorch targets for extra fire damage",
+      "stats": {
+        "damage": 6
+      }
+    },
+    {
+      "id": "thundering",
+      "name": "Thundering",
+      "type": "suffix",
+      "description": "Critical strikes arc electricity across targets",
+      "stats": {
+        "damage": 8
+      }
+    },
+    {
+      "id": "frost",
+      "name": "Frostbite",
+      "type": "prefix",
+      "description": "Chills targets on hit",
+      "stats": {
+        "damage": 4
+      }
+    },
+    {
+      "id": "vampiric",
+      "name": "Vampiric",
+      "type": "prefix",
+      "description": "Leeches vitality on striking foes",
+      "stats": {
+        "damage": 3,
+        "healthBonus": 15
+      }
+    },
+    {
+      "id": "sturdy",
+      "name": "Sturdy",
+      "type": "prefix",
+      "description": "Reinforced plating withstands heavier impacts",
+      "stats": {
+        "defense": 6
+      }
+    },
+    {
+      "id": "fortified",
+      "name": "Fortified",
+      "type": "suffix",
+      "description": "Substantially dampens incoming physical damage",
+      "stats": {
+        "defense": 12
+      }
+    },
+    {
+      "id": "colossal",
+      "name": "Colossal",
+      "type": "prefix",
+      "description": "Endows the wearer with supreme fortitude",
+      "stats": {
+        "healthBonus": 35
+      }
+    },
+    {
+      "id": "titan",
+      "name": "of the Titan",
+      "type": "suffix",
+      "description": "Infused with primordial behemoth essence",
+      "stats": {
+        "damage": 5,
+        "healthBonus": 25,
+        "defense": 5
+      }
+    }
+  ]
+}

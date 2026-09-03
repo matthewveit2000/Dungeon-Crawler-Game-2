@@ -16,6 +16,7 @@ export class Staircase extends Entity {
       width: config.width,
       height: config.height,
       color: parseColor(config.color),
+      sprite: config.sprite,
     });
   }
 

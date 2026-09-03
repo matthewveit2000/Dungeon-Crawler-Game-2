@@ -38,7 +38,7 @@ export class MapGrid<T> {
    * @param y The Y coordinate.
    * @returns True if within bounds, false otherwise.
    */
-  private inBounds(x: number, y: number): boolean {
+  public inBounds(x: number, y: number): boolean {
     return x >= 0 && x < this.width && y >= 0 && y < this.height;
   }
 

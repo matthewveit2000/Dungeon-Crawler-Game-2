@@ -1,0 +1,19 @@
+{
+  "tiles": {
+    "wall": "/assets/tiles/wall.png",
+    "floor": "/assets/tiles/floor.png"
+  },
+  "entities": {
+    "player": "/assets/entities/player.png",
+    "player_idle_0": "/assets/entities/player_idle_0.png",
+    "player_idle_1": "/assets/entities/player_idle_1.png",
+    "player_walk_0": "/assets/entities/player_walk_0.png",
+    "player_walk_1": "/assets/entities/player_walk_1.png",
+    "player_walk_2": "/assets/entities/player_walk_2.png",
+    "player_walk_3": "/assets/entities/player_walk_3.png",
+    "staircase": "/assets/entities/staircase.png",
+    "goblin": "/assets/entities/goblin.png",
+    "skeleton": "/assets/entities/skeleton.png",
+    "rat": "/assets/entities/rat.png"
+  }
+}

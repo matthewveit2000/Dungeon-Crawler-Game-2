@@ -75,4 +75,13 @@ describe('Renderer', () => {
     expect(renderer.screenWidth).toBe(1024);
     expect(renderer.screenHeight).toBe(768);
   });
+
+  it('defaults texture sampling to nearest-neighbour for pixel art', async () => {
+    renderer = new Renderer();
+    await renderer.init(container);
+
+    const { TextureSource } = await import('pixi.js');
+    const source = new TextureSource();
+    expect(source.style.scaleMode).toBe('nearest');
+  });
 });

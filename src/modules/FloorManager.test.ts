@@ -30,7 +30,10 @@ describe('FloorManager', () => {
 
     expect(context.floors.getPlayer()).toBe(player);
     expect(context.floors.getStaircase()).not.toBeNull();
-    expect(context.entityManager.getEntities()).toHaveLength(2);
+    const baseCount = context.floors.getVendor() ? 3 : 2;
+    expect(context.entityManager.getEntities().length).toBe(
+      baseCount + context.floors.getEnemies().length,
+    );
   });
 
   it('spawns the player on standable floor', () => {
@@ -76,9 +79,10 @@ describe('FloorManager', () => {
 
     it('wipes every entity from the previous floor', () => {
       context.floors.build();
+      const countBefore = context.entityManager.getEntities().length;
       const stray = new TestSquare('stray', 0, 0);
       context.entityManager.addEntity(stray);
-      expect(context.entityManager.getEntities()).toHaveLength(3);
+      expect(context.entityManager.getEntities()).toHaveLength(countBefore + 1);
 
       context.floors.descend();
       context.floors.update();
@@ -86,7 +90,10 @@ describe('FloorManager', () => {
       // Leftovers used to survive every descent, so the floor was never wiped.
       expect(context.entityManager.getEntity('stray')).toBeUndefined();
       expect(stray.isDestroyed).toBe(true);
-      expect(context.entityManager.getEntities()).toHaveLength(2);
+      const baseCount = context.floors.getVendor() ? 3 : 2;
+      expect(context.entityManager.getEntities().length).toBe(
+        baseCount + context.floors.getEnemies().length,
+      );
     });
 
     it('does not leave the stage growing across many descents', () => {
@@ -95,8 +102,11 @@ describe('FloorManager', () => {
         context.floors.descend();
         context.floors.update();
       }
-      expect(context.stage.children).toHaveLength(2);
-      expect(context.entityManager.getEntities()).toHaveLength(2);
+      const baseCount = context.floors.getVendor() ? 3 : 2;
+      expect(context.stage.children.length).toBe(baseCount + context.floors.getEnemies().length);
+      expect(context.entityManager.getEntities().length).toBe(
+        baseCount + context.floors.getEnemies().length,
+      );
     });
 
     it('leaves the player standing somewhere valid on the new floor', () => {
@@ -221,6 +231,24 @@ describe('FloorManager', () => {
 
       expect({ x: second.x, y: second.y }).toEqual(position);
       expect(context.floors.currentDepth).toBe(1);
+    });
+  });
+
+  describe('combat entity lifecycle', () => {
+    it('removes killed enemies from the active enemies list and entityManager', () => {
+      context.floors.build();
+      const enemies = context.floors.getEnemies();
+      const initialCount = enemies.length;
+      expect(initialCount).toBeGreaterThan(0);
+
+      const targetEnemy = enemies[0];
+      targetEnemy.takeDamage(1000); // Lethal damage
+
+      context.floors.update();
+
+      expect(context.floors.getEnemies()).toHaveLength(initialCount - 1);
+      expect(context.entityManager.getEntity(targetEnemy.id)).toBeUndefined();
+      expect(targetEnemy.isDestroyed).toBe(true);
     });
   });
 });

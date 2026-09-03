@@ -32,7 +32,7 @@ The project began at 64 x 64 and moved to 32 x 32 in Phase 11.7. The reason is s
 
 **Zoom must always be a whole number.** A 1.5x zoom means one art pixel covers one and a half screen pixels, which cannot be drawn evenly and produces visible seams and shimmer. `packs.test.ts` asserts that `defaultZoom` is an integer.
 
-Until Phase 16 builds camera zoom, the game draws at 1x and the view is correspondingly wider. That is a known interim state, not the intended framing.
+Camera zoom was implemented in Phase 16, applying `defaultZoom` (2x) so the game opens at the intended framing.
 
 ## 4. Sprite Size Versus Collision Size
 
@@ -95,7 +95,10 @@ If it does need to change, the checklist is: update `spriteResolution` and `tile
 | Collision box is a whole number of pixels | `src/packs/packs.test.ts` |
 | Default zoom is a whole number | `src/packs/packs.test.ts` |
 | The resolution is never restated as a literal | `scripts/check-architecture.mjs` |
-| Nearest-neighbour filtering, integer zoom | Phase 16 — not yet built |
-| Camera snaps to whole pixels | Phase 16 — not yet built |
+| Nearest-neighbour filtering, integer zoom | Phase 16 (`src/engine/Renderer.ts`, `src/engine/Camera.ts`) |
+| Camera snaps to whole pixels | Phase 16 (`src/engine/Camera.ts`) |
+| Sprites loaded at whole multiple of tile size | Phase 17 (`src/engine/AssetLoader.ts`) |
+| Entity & tile sprite resolution with fallback | Phase 17 (`src/engine/View.ts`, `src/engine/TileRenderer.ts`) |
+| Deterministic frame animation playback | Phase 18 (`src/engine/SpriteAnimator.ts`, `src/modules/Player.ts`) |
 
-The rendering rules in the last two rows are specified in `.docs/SYSTEMS_OVERVIEW.md` section 1b and scheduled as Epic 4.5 in `ROADMAP.md`. Until those phases land, the game draws flat coloured rectangles at the correct dimensions rather than sprites.
+The rendering foundation rules, sprite pipeline, and deterministic animation system are specified in `.docs/SYSTEMS_OVERVIEW.md` section 1b and implemented across Phases 16, 17, and 18. Entities and tiles are drawn using 32 x 32 pixel art sprites and frame sequences declared in Tier 3 `Art.json` and entity packs. The final phase of Epic 4.5 is Phase 19 (Art Pipeline Checkpoint).

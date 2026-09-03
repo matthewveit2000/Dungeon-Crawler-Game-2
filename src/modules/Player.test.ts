@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { Player } from './Player';
+import { Enemy } from './Enemy';
 import { Level } from './Level';
 import { TileType } from './MapGenerator';
 import { InputManager } from '../engine/InputManager';
@@ -280,6 +281,91 @@ describe('Player', () => {
       expect(fired).toBe(1);
       for (let i = 0; i < 30; i++) player.update(STEP); // Still held.
       expect(fired).toBe(1);
+    });
+  });
+
+  describe('animation state', () => {
+    it('defaults to idle animation', () => {
+      const player = new Player('p', 0, 0, inputManager);
+      expect(player.currentAnimation).toBe('idle');
+    });
+
+    it('switches to walk animation when moving', () => {
+      const level = levelWith([
+        [1, 1],
+        [2, 1],
+      ]);
+      const movingInput = withKeys({ d: true });
+      const player = new Player('p', level.tileSize * 1.5, level.tileSize * 1.5, movingInput, {
+        level,
+      });
+
+      player.update(STEP);
+      expect(player.currentAnimation).toBe('walk');
+    });
+
+    it('returns to idle animation when stopped', () => {
+      const level = levelWith([
+        [1, 1],
+        [2, 1],
+      ]);
+      const movingInput = withKeys({ d: true });
+      const player = new Player('p', level.tileSize * 1.5, level.tileSize * 1.5, movingInput, {
+        level,
+      });
+
+      player.update(STEP);
+      expect(player.currentAnimation).toBe('walk');
+
+      const idleInput = withKeys({});
+      const idlePlayer = new Player('p2', level.tileSize * 1.5, level.tileSize * 1.5, idleInput, {
+        level,
+      });
+      idlePlayer.update(STEP);
+      expect(idlePlayer.currentAnimation).toBe('idle');
+    });
+  });
+
+  describe('combat mechanics', () => {
+    it('initializes with default weapon from pack (sword)', () => {
+      const player = new Player('p', 100, 100, inputManager);
+      expect(player.weapon.id).toBe('sword');
+      expect(player.weapon.type).toBe('melee');
+    });
+
+    it('toggles weapon when switchWeapon key is pressed', () => {
+      const input = withKeys({ q: true });
+      const player = new Player('p', 100, 100, input);
+      expect(player.weapon.id).toBe('sword');
+
+      player.update(STEP);
+      expect(player.weapon.id).toBe('bow');
+      expect(player.weapon.type).toBe('ranged');
+    });
+
+    it('damages in-range enemies when attack key is pressed', () => {
+      const input = withKeys({ ' ': true });
+      const player = new Player('p', 100, 100, input);
+      const enemy = new Enemy('goblin-1', 'goblin', 120, 100);
+      const startHealth = enemy.health;
+      player.setEnemyTargets([enemy]);
+
+      player.update(STEP);
+
+      expect(enemy.health).toBe(startHealth - player.weapon.damage);
+    });
+
+    it('spawns a projectile when attacking with ranged weapon', () => {
+      let spawned = false;
+      const input = withKeys({ ' ': true });
+      const player = new Player('p', 100, 100, input, { weaponId: 'bow' });
+      player.setSpawnProjectileCallback(() => {
+        spawned = true;
+      });
+
+      player.update(STEP);
+
+      expect(spawned).toBe(true);
     });
   });
 });

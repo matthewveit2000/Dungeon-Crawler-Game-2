@@ -1,7 +1,8 @@
 import { Rng } from '../engine/Rng';
 import { MapGrid } from './MapGrid';
-import { MapGenerator, TileType } from './MapGenerator';
+import { MapGenerator, TileType, CityBounds, BossArenaBounds } from './MapGenerator';
 import world from '../packs/World.json';
+import prefabs from '../packs/Prefabs.json';
 
 export interface LevelOptions {
   width?: number;
@@ -23,6 +24,10 @@ export interface LevelOptions {
 export class Level {
   public grid: MapGrid<TileType>;
   public readonly tileSize: number;
+  public cityBounds?: CityBounds;
+  public bossArenaBounds?: BossArenaBounds;
+  public isBossArenaLocked = false;
+  public isTreasureRoomUnlocked = false;
 
   private readonly steps: number;
   private readonly brushRadius: number;
@@ -129,11 +134,91 @@ export class Level {
     return false;
   }
 
+  public isSafeZone(worldX: number, worldY: number): boolean {
+    const gx = Math.floor(worldX / this.tileSize);
+    const gy = Math.floor(worldY / this.tileSize);
+    if (gx < 0 || gx >= this.grid.width || gy < 0 || gy >= this.grid.height) return false;
+    return this.grid.get(gx, gy) === TileType.SAFE_ZONE;
+  }
+
+  public isInsideBossArena(worldX: number, worldY: number): boolean {
+    if (!this.bossArenaBounds) return false;
+    const gx = Math.floor(worldX / this.tileSize);
+    const gy = Math.floor(worldY / this.tileSize);
+    const arena = this.bossArenaBounds.arena;
+    return (
+      gx > arena.x &&
+      gx < arena.x + arena.width - 1 &&
+      gy > arena.y &&
+      gy < arena.y + arena.height - 1
+    );
+  }
+
+  public lockBossArena(): void {
+    this.isBossArenaLocked = true;
+    if (this.bossArenaBounds) {
+      for (const door of this.bossArenaBounds.entranceDoors) {
+        this.grid.set(door.x, door.y, TileType.WALL);
+      }
+    }
+  }
+
+  public unlockTreasureRoom(): void {
+    this.isTreasureRoomUnlocked = true;
+    if (this.bossArenaBounds) {
+      for (const door of this.bossArenaBounds.treasureDoors) {
+        this.grid.set(door.x, door.y, TileType.FLOOR);
+      }
+      for (const door of this.bossArenaBounds.entranceDoors) {
+        this.grid.set(door.x, door.y, TileType.FLOOR);
+      }
+    }
+  }
+
   private generate(): void {
     MapGenerator.generateRandomWalk(this.grid, {
       steps: this.steps,
       brushRadius: this.brushRadius,
       rng: this.rng,
     });
+
+    const cityW = prefabs.city.width;
+    const cityH = prefabs.city.height;
+    if (this.grid.width < cityW + 4 || this.grid.height < cityH + 4) return;
+
+    const spawnT = this.spawnTile;
+    const cityX = Math.max(
+      2,
+      Math.min(this.grid.width - cityW - 2, spawnT.x - Math.floor(cityW / 2)),
+    );
+    const cityY = Math.max(
+      2,
+      Math.min(this.grid.height - cityH - 2, spawnT.y - Math.floor(cityH / 2) - 8),
+    );
+
+    const bounds = MapGenerator.injectCityPrefab(this.grid, {
+      x: cityX,
+      y: cityY,
+      width: cityW,
+      height: cityH,
+    });
+
+    this.cityBounds = {
+      ...bounds,
+      center: this.tileCenter(bounds.center.x, bounds.center.y),
+    };
+
+    const arenaW = prefabs.bossArena?.width ?? 16;
+    const arenaH = prefabs.bossArena?.height ?? 16;
+    if (this.grid.width >= arenaW + 16 && this.grid.height >= arenaH + 16) {
+      const arenaX = Math.max(2, Math.min(this.grid.width - arenaW - 2, spawnT.x + 10));
+      const arenaY = Math.max(10, Math.min(this.grid.height - arenaH - 2, spawnT.y + 10));
+      this.bossArenaBounds = MapGenerator.injectBossArena(this.grid, {
+        x: arenaX,
+        y: arenaY,
+        width: arenaW,
+        height: arenaH,
+      });
+    }
   }
 }

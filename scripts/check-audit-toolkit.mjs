@@ -25,6 +25,13 @@ const REQUIRED_COMMANDS = [
   'getFloorStats',
   'setTimer',
   'toggleMenu',
+  'getZoom',
+  'setZoom',
+  'damagePlayer',
+  'teleportToEnemy',
+  'playerAttack',
+  'equipWeapon',
+  'spawnLoot',
 ];
 
 const DIST = 'dist/assets';

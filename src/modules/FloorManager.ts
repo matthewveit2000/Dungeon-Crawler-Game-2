@@ -1,8 +1,13 @@
 import { EntityManager } from '../engine/EntityManager';
 import { InputManager } from '../engine/InputManager';
+import { Rng } from '../engine/Rng';
 import { Level } from './Level';
+import { TileType } from './MapGenerator';
 import { Player } from './Player';
 import { Staircase } from './Staircase';
+import { Enemy } from './Enemy';
+import { EnemySpawner } from './EnemySpawner';
+import { Projectile } from './Projectile';
 
 const PLAYER_ID = 'player-1';
 const STAIRCASE_ID = 'staircase-1';
@@ -21,9 +26,11 @@ export class FloorManager {
   private readonly entityManager: EntityManager;
   private readonly inputManager: InputManager;
   private readonly onFloorBuilt: (level: Level) => void;
+  private readonly enemySpawner: EnemySpawner;
 
   private player: Player | null = null;
   private staircase: Staircase | null = null;
+  private enemies: Enemy[] = [];
   private depth = 1;
   private descendRequested = false;
 
@@ -32,11 +39,13 @@ export class FloorManager {
     entityManager: EntityManager,
     inputManager: InputManager,
     onFloorBuilt: (level: Level) => void,
+    enemySpawner?: EnemySpawner,
   ) {
     this.level = level;
     this.entityManager = entityManager;
     this.inputManager = inputManager;
     this.onFloorBuilt = onFloorBuilt;
+    this.enemySpawner = enemySpawner ?? new EnemySpawner(new Rng(level.seed));
   }
 
   /** How many floors deep the run currently is, counting from one. */
@@ -68,6 +77,17 @@ export class FloorManager {
     this.entityManager.addEntity(staircase);
     this.entityManager.addEntity(player);
 
+    this.enemies = this.enemySpawner.spawn(this.level, spawn);
+    for (const enemy of this.enemies) {
+      enemy.setTarget(player);
+      this.entityManager.addEntity(enemy);
+    }
+
+    player.setEnemyTargets(this.enemies);
+    player.setSpawnProjectileCallback((proj) => {
+      this.entityManager.addEntity(proj);
+    });
+
     player.setStaircase(staircase);
     player.setInteractionCallback(() => this.descend());
     this.descendRequested = false;
@@ -77,6 +97,10 @@ export class FloorManager {
 
     this.onFloorBuilt(this.level);
     return player;
+  }
+
+  public getEnemies(): Enemy[] {
+    return this.enemies;
   }
 
   /**
@@ -95,10 +119,35 @@ export class FloorManager {
   }
 
   /**
-   * Applies a pending descent. Call once per frame, after entities have been
-   * updated and are no longer mid-flight.
+   * Applies a pending descent and manages projectile hits and defeated enemy cleanup.
    */
   public update(): void {
+    const entities = this.entityManager.getEntities();
+    for (const entity of entities) {
+      if (entity instanceof Projectile) {
+        for (const enemy of this.enemies) {
+          if (entity.checkCollisionWith(enemy)) {
+            break;
+          }
+        }
+      }
+    }
+
+    for (let i = this.enemies.length - 1; i >= 0; i--) {
+      const enemy = this.enemies[i];
+      if (!enemy.isAlive) {
+        this.enemies.splice(i, 1);
+        this.entityManager.removeEntity(enemy.id);
+        enemy.destroy();
+      }
+    }
+
+    for (const entity of this.entityManager.getEntities()) {
+      if (entity.isDestroyed) {
+        this.entityManager.removeEntity(entity.id);
+      }
+    }
+
     if (!this.descendRequested) return;
 
     this.descendRequested = false;
@@ -122,5 +171,29 @@ export class FloorManager {
     this.player.y = this.staircase.y;
     this.player.syncView();
     return true;
+  }
+
+  /** Aggregates statistical metrics for the active dungeon floor. */
+  public getFloorStats(): Record<string, number> {
+    let floorTiles = 0;
+    for (let y = 0; y < this.level.grid.height; y++) {
+      for (let x = 0; x < this.level.grid.width; x++) {
+        if (this.level.grid.get(x, y) === TileType.FLOOR) floorTiles++;
+      }
+    }
+    const spawn = this.level.spawnPoint;
+    const exit = this.level.findFarthestFloor(spawn.x, spawn.y);
+    const distance = Math.hypot(exit.x - spawn.x, exit.y - spawn.y);
+    return {
+      depth: this.currentDepth,
+      seed: this.level.seed,
+      enemies: this.enemies.length,
+      floorTiles,
+      gridTiles: this.level.grid.width * this.level.grid.height,
+      worldWidthPx: this.level.grid.width * this.level.tileSize,
+      worldHeightPx: this.level.grid.height * this.level.tileSize,
+      stairsDistancePx: Math.round(distance),
+      stairsSecondsAway: Math.round(distance / (this.player?.speed ?? 1)),
+    };
   }
 }

@@ -2,5 +2,17 @@
   "speed": 160,
   "sizeRatio": 0.25,
   "color": "0x35d94a",
-  "interactRadius": 48
+  "maxHealth": 100,
+  "interactRadius": 48,
+  "sprite": "player",
+  "animations": {
+    "idle": {
+      "fps": 2,
+      "frames": ["player_idle_0", "player_idle_1"]
+    },
+    "walk": {
+      "fps": 8,
+      "frames": ["player_walk_0", "player_walk_1", "player_walk_2", "player_walk_3"]
+    }
+  }
 }

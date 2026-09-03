@@ -2,3 +2,4 @@ node_modules/
 dist/
 dev_server.log
 coverage/
+assets/raw/*.zip

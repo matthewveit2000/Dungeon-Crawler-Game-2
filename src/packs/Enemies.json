@@ -1,0 +1,44 @@
+{
+  "types": {
+    "goblin": {
+      "name": "Goblin",
+      "health": 30,
+      "speed": 80,
+      "sprite": "goblin",
+      "color": "0x55aa33",
+      "sizeRatio": 0.25,
+      "damage": 10,
+      "aggroRadius": 160
+    },
+    "skeleton": {
+      "name": "Skeleton",
+      "health": 45,
+      "speed": 60,
+      "sprite": "skeleton",
+      "color": "0xdddddd",
+      "sizeRatio": 0.25,
+      "damage": 15,
+      "aggroRadius": 192
+    },
+    "rat": {
+      "name": "Giant Rat",
+      "health": 15,
+      "speed": 110,
+      "sprite": "rat",
+      "color": "0x885533",
+      "sizeRatio": 0.25,
+      "damage": 5,
+      "aggroRadius": 128
+    }
+  },
+  "spawning": {
+    "minEnemies": 3,
+    "maxEnemies": 8,
+    "minDistanceFromPlayerTiles": 4,
+    "weights": {
+      "rat": 50,
+      "goblin": 35,
+      "skeleton": 15
+    }
+  }
+}

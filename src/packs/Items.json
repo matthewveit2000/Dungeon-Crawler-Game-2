@@ -1,0 +1,90 @@
+{
+  "levelScalingFactor": 0.2,
+  "rarities": {
+    "common": {
+      "name": "Common",
+      "multiplier": 1.0,
+      "weight": 60,
+      "color": "0xffffff"
+    },
+    "uncommon": {
+      "name": "Uncommon",
+      "multiplier": 1.4,
+      "weight": 25,
+      "color": "0x1eff00"
+    },
+    "rare": {
+      "name": "Rare",
+      "multiplier": 2.0,
+      "weight": 11,
+      "color": "0x0070dd"
+    },
+    "legendary": {
+      "name": "Legendary",
+      "multiplier": 3.0,
+      "weight": 4,
+      "color": "0xff8000"
+    }
+  },
+  "bases": {
+    "sword": {
+      "id": "sword",
+      "name": "Sword",
+      "slot": "weapon",
+      "baseStats": {
+        "damage": 15
+      }
+    },
+    "dagger": {
+      "id": "dagger",
+      "name": "Dagger",
+      "slot": "weapon",
+      "baseStats": {
+        "damage": 10
+      }
+    },
+    "bow": {
+      "id": "bow",
+      "name": "Bow",
+      "slot": "weapon",
+      "baseStats": {
+        "damage": 12
+      }
+    },
+    "staff": {
+      "id": "staff",
+      "name": "Staff",
+      "slot": "weapon",
+      "baseStats": {
+        "damage": 18
+      }
+    },
+    "armor_leather": {
+      "id": "armor_leather",
+      "name": "Leather Tunic",
+      "slot": "armor",
+      "baseStats": {
+        "defense": 5,
+        "healthBonus": 20
+      }
+    },
+    "armor_chain": {
+      "id": "armor_chain",
+      "name": "Chainmail",
+      "slot": "armor",
+      "baseStats": {
+        "defense": 10,
+        "healthBonus": 40
+      }
+    },
+    "armor_plate": {
+      "id": "armor_plate",
+      "name": "Plate Cuirass",
+      "slot": "armor",
+      "baseStats": {
+        "defense": 18,
+        "healthBonus": 75
+      }
+    }
+  }
+}

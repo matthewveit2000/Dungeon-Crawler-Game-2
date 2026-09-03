@@ -56,6 +56,10 @@ The game is playable the moment the page loads. For hands-on verification, open 
 | `window.audit.spawnTestSquare()` | Drops a spinning marker beside you. |
 | `window.audit.getFPS()` | Reports the current frame rate. |
 | `window.audit.getRendererDimensions()` | Reports the canvas size. |
+| `window.audit.setTimer(seconds)` | Sets the global countdown timer to a specific number of seconds. |
+| `window.audit.toggleMenu()` | Toggles the menu state, pausing or resuming the simulation. |
+| `window.audit.getZoom()` | Reports the current integer camera zoom factor. |
+| `window.audit.setZoom(zoom)` | Sets the integer camera zoom factor (e.g. 2, 4). Non-integers are rejected. |
 | `window.audit.logInputs = true` | Logs every keystroke and mouse movement. |
 
 ## Art Direction

@@ -20,14 +20,14 @@ export class TimerOverlay {
 
     const style = new TextStyle({
       fontFamily: 'monospace',
-      fontSize: 32,
+      fontSize: 96,
       fill: 0xffffff, // White text
       dropShadow: {
         alpha: 1,
         angle: Math.PI / 6,
-        blur: 4,
+        blur: 6,
         color: 0x000000,
-        distance: 2,
+        distance: 4,
       },
       fontWeight: 'bold',
     });

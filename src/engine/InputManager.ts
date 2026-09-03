@@ -65,6 +65,9 @@ export class InputManager {
   };
 
   private handleMouseDown = (e: MouseEvent) => {
+    const btn = `mouse${e.button}`;
+    if (!this.keys[btn]) this.justPressed[btn] = true;
+    this.keys[btn] = true;
     if (e.button === 0) {
       this.mouse.left = true;
     } else if (e.button === 2) {
@@ -73,6 +76,8 @@ export class InputManager {
   };
 
   private handleMouseUp = (e: MouseEvent) => {
+    const btn = `mouse${e.button}`;
+    this.keys[btn] = false;
     if (e.button === 0) {
       this.mouse.left = false;
     } else if (e.button === 2) {

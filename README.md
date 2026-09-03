@@ -60,7 +60,7 @@ The game is playable the moment the page loads. For hands-on verification, open 
 
 ## Art Direction
 
-The game is pixel art at **64 x 64 pixels per sprite** — one sprite fills exactly one floor tile, placed at 1:1 with no scaling. That is the high-fidelity end of the style, chosen so a character's armour and weapon stay readable, which matters in a game built around finding better gear. A typical window shows about 20 tiles across.
+The game is pixel art at **32 x 32 pixels per sprite** — one sprite fills exactly one floor tile, placed at 1:1 with no scaling. The camera runs at a whole-number zoom, 2x by default, so a typical window shows about 20 tiles across. 32 x 32 is the resolution most freely licensed pixel art is drawn at, which lets the project draw on an existing asset library rather than commissioning every sprite.
 
 `.docs/ART_GUIDE.md` is the full specification for anyone producing art. The resolution is stated once in `src/packs/World.json` and enforced by both the test suite and CI, so the documentation cannot drift away from the build.
 

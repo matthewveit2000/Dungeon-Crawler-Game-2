@@ -1,7 +1,7 @@
 {
   "staircase": {
-    "width": 64,
-    "height": 64,
+    "width": 32,
+    "height": 32,
     "color": "0x4d7fd6"
   }
 }

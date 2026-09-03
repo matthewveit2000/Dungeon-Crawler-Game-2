@@ -12,13 +12,13 @@ import debug from './Debug.json';
  */
 describe('Tier 3 packs', () => {
   describe('art resolution', () => {
-    it('declares a sprite resolution of 64x64', () => {
-      expect(world.spriteResolution).toBe(64);
+    it('declares a sprite resolution of 32x32', () => {
+      expect(world.spriteResolution).toBe(32);
     });
 
     it('keeps one world tile equal to one sprite, so art drops in at 1:1', () => {
-      // If these ever diverge, every 64x64 tile would need scaling to fit a
-      // tile, which is exactly what destroys crisp pixel art.
+      // If these ever diverge, every sprite would need scaling by a fraction
+      // to fit a tile, which is exactly what destroys crisp pixel art.
       expect(world.tileSize).toBe(world.spriteResolution);
     });
 
@@ -37,14 +37,23 @@ describe('Tier 3 packs', () => {
     it('keeps the collision box a whole number of pixels', () => {
       expect(Number.isInteger(world.tileSize * player.sizeRatio)).toBe(true);
     });
+
+    it('declares a whole-number default zoom', () => {
+      // A fractional zoom means one art pixel covers a fraction of a screen
+      // pixel, which cannot be drawn evenly and produces seams and shimmer.
+      expect(Number.isInteger(world.defaultZoom)).toBe(true);
+      expect(world.defaultZoom).toBeGreaterThanOrEqual(1);
+    });
   });
 
   describe('world', () => {
     it('carves corridors comfortably wider than the player', () => {
       // What matters is the corridor's width relative to the body moving down
-      // it, not its width in tiles. At 64px tiles a single-tile corridor is
-      // four times the player's collision box, which is ample; at 40px tiles
-      // the same brush was tight enough to need widening.
+      // it, not its width in tiles. A single-tile corridor is four times the
+      // player's collision box, which is ample — and because both sides scale
+      // with tileSize, that ratio survives any change of resolution. At the
+      // project's early 40px tiles the same brush was tight enough to need
+      // widening, which is why this asserts the ratio and not a pixel count.
       const corridorTiles = world.generation.brushRadius * 2 + 1;
       const corridorPx = corridorTiles * world.tileSize;
       const playerPx = world.tileSize * player.sizeRatio;

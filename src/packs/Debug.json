@@ -1,7 +1,7 @@
 {
   "testSquare": {
-    "width": 50,
-    "height": 50,
+    "width": 25,
+    "height": 25,
     "color": "0xff0000",
     "spinRate": 0.6
   }

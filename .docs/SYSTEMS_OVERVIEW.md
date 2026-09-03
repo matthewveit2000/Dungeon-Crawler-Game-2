@@ -8,7 +8,7 @@ The procedural map generation utilizes a random-walk algorithm. Every parameter 
 
 - **The Grid:** A floor is a fixed grid of tiles held as a single flat array. At the shipped settings that is 160 x 160 tiles of 40 pixels each — a world 6,400 pixels square. The whole grid is generated up front when a floor is created.
 - **Carving the Cave:** A walker starts at the centre of the grid and takes 40,000 random steps, stamping floor as it goes. Because the walker never teleports, every carved tile is connected to the start by construction: there can be no sealed-off pocket the player cannot reach.
-- **Corridor Width:** The walker carves a single tile at a time. What makes a corridor comfortable is its width relative to the body moving down it, not its width in tiles: at 64-pixel tiles a one-tile corridor is 64 pixels against a 16-pixel collision box, four times the room needed. At the project's earlier 40-pixel tiles the same brush was tight enough that it was widened to three tiles; moving to 64-pixel art made that unnecessary. `packs.test.ts` asserts the ratio rather than the tile count, so the constraint holds through any future change of scale.
+- **Corridor Width:** The walker carves a single tile at a time. What makes a corridor comfortable is its width relative to the body moving down it, not its width in tiles: at 32-pixel tiles a one-tile corridor is 32 pixels against an 8-pixel collision box, four times the room needed. At the project's earlier 40-pixel tiles the same brush was tight enough that it was widened to three tiles; the move to 64-pixel art made that unnecessary, and the later move to 32 preserved the ratio exactly, because both sides of it scale with the tile. `packs.test.ts` asserts the ratio rather than the tile count, so the constraint holds through any future change of scale.
 - **Rendering:** Only floor tiles are drawn, and runs of adjacent floor tiles along a row are merged into single rectangles. Solid rock is simply the background showing through, so the most common tile costs nothing to draw.
 - **A Note on Scale:** The map is currently a bounded grid, not an endless one. It is large enough that crossing it takes real time, but it does have edges. Genuinely endless floors would need the map to be built and drawn in chunks as the player moves, which is a larger change and an open decision for the PM. This document will be updated when that decision is made — it must never describe a system the code does not have.
 - **Prefab Instancing:** Standard dungeon caves are generated randomly, but "Cities" and "Boss Arenas" will be pre-designed templates stored in Tier 3 Packs. The map generator will inject these templates into the random grid at specific mathematical intervals. *(Planned for Epics 7 and 8; not yet built.)*
@@ -21,7 +21,7 @@ Every roll of the dice in world generation comes from a seeded generator rather 
 
 The game's art is authored at a fixed resolution, and the rendering pipeline is built around keeping that resolution intact all the way to the screen. `.docs/ART_GUIDE.md` is the full specification; this section covers the systems consequences.
 
-**Sprite resolution is 64 x 64 pixels.** One sprite is exactly one world tile, so art is placed at 1:1 with no scaling at import. `spriteResolution` and `tileSize` in `src/packs/World.json` state this once, everything else derives from them, and `src/packs/packs.test.ts` fails the build if they diverge.
+**Sprite resolution is 32 x 32 pixels.** One sprite is exactly one world tile, so art is placed at 1:1 with no scaling at import. The resolution was lowered from 64 in Phase 11.7 to open up the freely licensed 32 x 32 art ecosystem. `spriteResolution` and `tileSize` in `src/packs/World.json` state this once, everything else derives from them, and `src/packs/packs.test.ts` fails the build if they diverge.
 
 **Scale is what makes or breaks pixel art.** Three rules govern it, and breaking any one produces the blurring or shimmering that makes pixel art look cheap:
 
@@ -31,11 +31,11 @@ The game's art is authored at a fixed resolution, and the rendering pipeline is 
 
 The first of these is a data constraint, the second and third are engine work scheduled as Epic 4.5.
 
-**Screen coverage.** At 64 x 64 and 1x zoom, a 1280 x 800 window shows 20 x 12.5 tiles — a tactical view, wide enough to see an enemy approach and react. On displays large enough that the tile count becomes unreadable, a 2x zoom halves it.
+**Screen coverage.** At 32 x 32 and the default 2x zoom, a 1280 x 800 window shows 20 x 12.5 tiles — a tactical view, wide enough to see an enemy approach and react. This is the same framing the project had at 64 x 64 art and 1x zoom. `defaultZoom` in `World.json` states it; zoom is always a whole number, and on displays large enough that the tile count becomes unreadable the next step up is 4x. Camera zoom itself is built in Phase 16, so until then the game draws at 1x and the view is correspondingly wider.
 
-**Sprite size is not collision size.** The player's sprite is a full 64 x 64 tile; the box collision is tested against is 16 x 16, a quarter of it, set by `sizeRatio`. The box stands for roughly the character's feet. A character colliding across their full sprite width could not pass through gaps their art suggests they should, which reads to a player as the game being unresponsive.
+**Sprite size is not collision size.** The player's sprite is a full 32 x 32 tile; the box collision is tested against is 8 x 8, a quarter of it, set by `sizeRatio`. The box stands for roughly the character's feet. A character colliding across their full sprite width could not pass through gaps their art suggests they should, which reads to a player as the game being unresponsive.
 
-**Movement is stated in pixels but tuned in tiles.** Player speed is 320 pixels per second, which at 64-pixel tiles is 5 tiles per second. Tiles per second is the number that describes how the game feels; the pixel figure is a consequence of the tile size, and the two must be rescaled together.
+**Movement is stated in pixels but tuned in tiles.** Player speed is 160 pixels per second, which at 32-pixel tiles is 5 tiles per second. Tiles per second is the number that describes how the game feels; the pixel figure is a consequence of the tile size, and the two must be rescaled together.
 
 ## 1a. Movement and Collision
 

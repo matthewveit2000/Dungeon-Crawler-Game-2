@@ -94,13 +94,13 @@
 
 ### Settled: Art Resolution
 
-Sprite resolution is fixed at **64 x 64 pixels**, one sprite to one world tile. The world grid stays 160 x 160 tiles, which at 64-pixel tiles is 10,240 pixels square. Player speed was rescaled from 200 to 320 pixels per second so that movement stays at 5 tiles per second — an identical feel, expressed in the new units.
+Sprite resolution is fixed at **32 x 32 pixels**, one sprite to one world tile, with a default camera zoom of 2x. The world grid stays 160 x 160 tiles, which at 32-pixel tiles is 5,120 pixels square. The project moved 40 -> 64 in Phase 11.6 and 64 -> 32 in Phase 11.7, the latter to gain access to the freely licensed 32 x 32 art ecosystem; player speed was rescaled each time so movement stays at 5 tiles per second — an identical feel, expressed in new units.
 
 The full specification is `.docs/ART_GUIDE.md`. The rendering work this implies is Epic 4.5 above.
 
 ### Open Decision: World Scale
 
-The world is a bounded grid, not an endless one. It is 160 x 160 tiles, which at 64-pixel tiles is 10,240 pixels square, and puts the staircase roughly twenty seconds of running away in a straight line before any exploration. Epic 4 gives the player three hundred seconds. (Moving to 64-pixel art did not change this: the grid is the same number of tiles and the player covers the same tiles per second.)
+The world is a bounded grid, not an endless one. It is 160 x 160 tiles, which at 32-pixel tiles is 5,120 pixels square, and puts the staircase roughly twenty seconds of running away in a straight line before any exploration. Epic 4 gives the player three hundred seconds. (Neither change of art resolution affected this: the grid is the same number of tiles and the player covers the same tiles per second.)
 
 Whether that is the right shape for the game is a PM decision, not a technical one, and it should be settled before Epic 4 is designed:
 
@@ -140,18 +140,18 @@ Whether that is the right shape for the game is a PM decision, not a technical o
 
 ## EPIC 4.5: Pixel Art Rendering Pipeline
 
-*Inserted after the art resolution was fixed at 64 x 64. These phases must complete before Epic 5, because the moment enemies exist they will need sprites, and every entity built before the pipeline exists is one that has to be retrofitted afterwards. Specification: `.docs/ART_GUIDE.md`.*
+*Inserted after the art resolution was settled, and retargeted to 32 x 32 in Phase 11.7. These phases must complete before Epic 5, because the moment enemies exist they will need sprites, and every entity built before the pipeline exists is one that has to be retrofitted afterwards. Specification: `.docs/ART_GUIDE.md`.*
 
 - **Phase 16: Pixel-Perfect Rendering Foundation**
 
-* *Objective:* Make the renderer preserve authored pixels exactly. Sample textures nearest-neighbour rather than smoothing them, support a whole-number camera zoom, and snap the camera position to whole pixels so the world does not shimmer as the player moves. No art is introduced in this phase; it prepares the surface that art will land on.
+* *Objective:* Make the renderer preserve authored pixels exactly. Sample textures nearest-neighbour rather than smoothing them, support a whole-number camera zoom applied from `defaultZoom` in `World.json`, and snap the camera position to whole pixels so the world does not shimmer as the player moves. No art is introduced in this phase; it prepares the surface that art will land on.
 * *Tier Impacted:* Tier 1 (Engine).
 * *TDD Criteria:* The camera pivot resolves to whole pixels at every zoom level and every fractional player position. A non-integer zoom is rejected. Texture sampling defaults to nearest-neighbour.
-* *Verification:* PM runs window.audit.setZoom(2) and confirms the view doubles cleanly with no blurring, then walks around and confirms no shimmering or crawling along tile edges.
+* *Verification:* PM confirms the game opens at the default 2x zoom showing about 20 tiles across, runs window.audit.setZoom(4) and confirms the view doubles cleanly with no blurring, then walks around and confirms no shimmering or crawling along tile edges.
 
 - **Phase 17: Sprite Loading & the Tier 3 Art Pack**
 
-* *Objective:* Load 64 x 64 sprites declared in Tier 3 and draw entities and tiles with them instead of flat coloured rectangles. Missing art must fall back to the current coloured placeholder with a console warning rather than crashing, per the Graceful Failure rule.
+* *Objective:* Load 32 x 32 sprites declared in Tier 3 and draw entities and tiles with them instead of flat coloured rectangles. Missing art must fall back to the current coloured placeholder with a console warning rather than crashing, per the Graceful Failure rule.
 * *Tier Impacted:* Tier 1 & Tier 3.
 * *TDD Criteria:* An entity resolves its art from a Tier 3 declaration; a declaration pointing at missing art yields a placeholder and a warning, not an exception. A sprite whose dimensions are not a whole multiple of the tile size is rejected at load.
 * *Verification:* PM sees drawn tiles and a drawn character in place of coloured squares, and window.audit.spawnTestSquare() still works.

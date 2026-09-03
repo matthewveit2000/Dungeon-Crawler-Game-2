@@ -1,10 +1,11 @@
 {
-  "spriteResolution": 64,
+  "spriteResolution": 32,
   "grid": {
     "width": 160,
     "height": 160
   },
-  "tileSize": 64,
+  "tileSize": 32,
+  "defaultZoom": 2,
   "generation": {
     "walkSteps": 40000,
     "brushRadius": 0

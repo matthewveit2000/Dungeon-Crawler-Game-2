@@ -5,15 +5,19 @@ import { EntityManager } from './engine/EntityManager';
 import { Camera } from './engine/Camera';
 import { TileRenderer } from './engine/TileRenderer';
 import { MapOverlay } from './engine/MapOverlay';
+import { TimerOverlay } from './engine/TimerOverlay';
+import { GameOverOverlay } from './engine/GameOverOverlay';
+import { HealthOverlay } from './engine/HealthOverlay';
+import { AssetLoader } from './engine/AssetLoader';
 import { parseColor } from './engine/View';
 import { Level } from './modules/Level';
-import { TileType } from './modules/MapGenerator';
 import { FloorManager } from './modules/FloorManager';
 import { TestSquare } from './modules/TestSquare';
 import { Timer } from './modules/Timer';
-import { TimerOverlay } from './engine/TimerOverlay';
-import { GameOverOverlay } from './engine/GameOverOverlay';
+import { ItemGenerator } from './modules/ItemGenerator';
+import { Rng } from './engine/Rng';
 import world from './packs/World.json';
+import art from './packs/Art.json';
 
 /** Console helpers the PM uses to verify each phase by hand. */
 interface AuditToolkit {
@@ -29,6 +33,13 @@ interface AuditToolkit {
   getFloorStats(): Record<string, number>;
   setTimer(seconds: number): string;
   toggleMenu(): string;
+  getZoom(): number;
+  setZoom(zoom: number): string;
+  damagePlayer(amount: number): string;
+  teleportToEnemy(index?: number): string;
+  playerAttack(targetX?: number, targetY?: number): string;
+  equipWeapon(id: string): string;
+  spawnLoot(level?: number, rarity?: string): string;
 }
 
 declare global {
@@ -38,9 +49,7 @@ declare global {
 }
 
 // Tile values map to palette entries by index; see TileType.
-const PALETTE: number[] = [];
-PALETTE[TileType.WALL] = parseColor(world.palette.wall);
-PALETTE[TileType.FLOOR] = parseColor(world.palette.floor);
+const PALETTE = [parseColor(world.palette.wall), parseColor(world.palette.floor)];
 
 async function bootstrap(): Promise<void> {
   console.log('Dungeon Crawler Engine initializing...');
@@ -52,85 +61,75 @@ async function bootstrap(): Promise<void> {
 
   const renderer = new Renderer({ background: parseColor(world.background) });
   await renderer.init(appContainer);
+  await AssetLoader.loadArtPack(art, world.tileSize);
 
   const inputManager = new InputManager();
   const gameLoop = new GameLoop();
   const entityManager = new EntityManager(renderer.world);
-  const camera = new Camera(renderer.world, renderer.screenWidth, renderer.screenHeight);
-
-  // Walls are the stage background colour, so skipping them removes most of the
-  // geometry without changing what the player sees.
+  const camera = new Camera(
+    renderer.world,
+    renderer.screenWidth,
+    renderer.screenHeight,
+    world.defaultZoom,
+  );
+  const tileSprites = [world.sprites?.wall, world.sprites?.floor];
   const tileRenderer = new TileRenderer({
     tileSize: world.tileSize,
     palette: PALETTE,
-    skip: [TileType.WALL],
+    sprites: tileSprites,
   });
   renderer.world.addChildAt(tileRenderer.view, 0);
 
   const overlay = new MapOverlay({
-    tileSize: world.overlay.tileSize,
+    ...world.overlay,
     palette: PALETTE,
     backdrop: parseColor(world.overlay.backdrop),
-    backdropAlpha: world.overlay.backdropAlpha,
-    padding: world.overlay.padding,
   });
   renderer.ui.addChild(overlay.view);
 
   const timer = new Timer();
   const timerOverlay = new TimerOverlay({ screenWidth: renderer.screenWidth });
-  renderer.ui.addChild(timerOverlay.view);
-
+  const healthOverlay = new HealthOverlay({ initialHealth: 100, maxHealth: 100 });
   const gameOverOverlay = new GameOverOverlay({
     screenWidth: renderer.screenWidth,
     screenHeight: renderer.screenHeight,
   });
-  renderer.ui.addChild(gameOverOverlay.view);
+  renderer.ui.addChild(timerOverlay.view, healthOverlay.view, gameOverOverlay.view);
 
   const level = new Level();
+  const itemGen = new ItemGenerator(new Rng(level.seed));
   const floors = new FloorManager(level, entityManager, inputManager, (built) => {
     tileRenderer.render(built.grid);
-    // Keep an open overlay in step with the floor it is describing.
-    if (overlay.isVisible) {
-      overlay.show(built.grid, renderer.screenWidth, renderer.screenHeight);
+    const p = floors.getPlayer();
+    if (p) {
+      camera.setTarget(p);
+      p.setScreenToWorld((x, y) => camera.screenToWorld(x, y));
+      healthOverlay.updateHealth(p.health, p.maxHealth);
+      p.setOnDamagedCallback(() => healthOverlay.updateHealth(p.health, p.maxHealth));
+      p.setOnDeathCallback(() => (gameLoop.stop(), gameOverOverlay.show()));
     }
+    if (overlay.isVisible) overlay.show(built.grid, renderer.screenWidth, renderer.screenHeight);
   });
 
   // A playable floor exists the moment the page loads; no console required.
-  camera.setTarget(floors.build());
+  floors.build();
 
   window.addEventListener('resize', () => {
     camera.resize(renderer.screenWidth, renderer.screenHeight);
     timerOverlay.resize(renderer.screenWidth);
     gameOverOverlay.resize(renderer.screenWidth, renderer.screenHeight);
-    if (overlay.isVisible) {
-      overlay.show(level.grid, renderer.screenWidth, renderer.screenHeight);
-    }
+    if (overlay.isVisible) overlay.show(level.grid, renderer.screenWidth, renderer.screenHeight);
   });
 
-  timer.setOnZeroCallback(() => {
-    const player = floors.getPlayer();
-    if (player) {
-      player.die();
-    }
-    gameLoop.stop();
-    gameOverOverlay.show();
-  });
+  timer.setOnZeroCallback(() => floors.getPlayer()?.die());
 
   gameLoop.start((dt) => {
     timer.update(dt);
     timerOverlay.updateTime(timer.toDisplayString());
-
     entityManager.update(dt);
-    // Applied after entity updates, so a descent never tears down an entity
-    // that is still mid-update.
     floors.update();
     camera.update();
-
-    if (window.audit?.logInputs) {
-      console.log('Input State:', inputManager.getState());
-    }
-
-    // Clears one-frame edge state; must run after everything that reads input.
+    if (window.audit?.logInputs) console.log('Input State:', inputManager.getState());
     inputManager.endFrame();
   });
 
@@ -138,93 +137,91 @@ async function bootstrap(): Promise<void> {
     logInputs: false,
 
     getFPS: () => gameLoop.getFPS(),
-
-    getRendererDimensions: () => ({
-      width: renderer.screenWidth,
-      height: renderer.screenHeight,
-    }),
+    getRendererDimensions: () => ({ width: renderer.screenWidth, height: renderer.screenHeight }),
 
     spawnTestSquare: () => {
-      const player = floors.getPlayer();
-      const x = (player?.x ?? 0) + world.tileSize * 2;
-      const y = player?.y ?? 0;
-      entityManager.addEntity(new TestSquare(`test-square-${Date.now()}`, x, y));
-      return `Spinning red square spawned two tiles to the right of the player at (${Math.round(x)}, ${Math.round(y)}).`;
+      const p = floors.getPlayer();
+      const x = (p?.x ?? 0) + world.tileSize * 2;
+      entityManager.addEntity(new TestSquare(`square-${Date.now()}`, x, p?.y ?? 0));
+      return `Spinning square spawned near player at (${Math.round(x)}, ${Math.round(p?.y ?? 0)}).`;
     },
-
     spawnPlayer: () => {
-      camera.setTarget(floors.build());
-      const spawn = level.spawnPoint;
-      return `Floor rebuilt. Player at (${Math.round(spawn.x)}, ${Math.round(spawn.y)}). Use WASD or the arrow keys to move.`;
+      floors.build();
+      return `Floor rebuilt. Player at (${Math.round(level.spawnPoint.x)}, ${Math.round(level.spawnPoint.y)}).`;
     },
-
     teleportToStairs: () => {
-      if (!floors.teleportToStaircase()) {
-        return 'No player on this floor. Run window.audit.spawnPlayer() first.';
-      }
-      const stairs = floors.getStaircase();
-      return `Teleported to the staircase at (${Math.round(stairs!.x)}, ${Math.round(stairs!.y)}). Press E to descend.`;
+      if (!floors.teleportToStaircase()) return 'No player on floor. Run spawnPlayer() first.';
+      const s = floors.getStaircase()!;
+      return `Teleported to staircase at (${Math.round(s.x)}, ${Math.round(s.y)}). Press E to descend.`;
     },
-
+    teleportToEnemy: (index = 0) => {
+      const es = floors.getEnemies();
+      const p = floors.getPlayer();
+      if (!p || es.length === 0) return 'No enemies or player found.';
+      const e = es[index % es.length];
+      p.x = e.x;
+      p.y = e.y;
+      p.syncView();
+      camera.setTarget(p);
+      return `Teleported near ${e.enemyType} at (${Math.round(e.x)}, ${Math.round(e.y)}).`;
+    },
     zoomOutMap: () => {
-      const shown = overlay.toggle(level.grid, renderer.screenWidth, renderer.screenHeight);
-      return shown
+      return overlay.toggle(level.grid, renderer.screenWidth, renderer.screenHeight)
         ? 'Macro map shown. Run window.audit.zoomOutMap() again to hide it.'
         : 'Macro map hidden.';
     },
-
     getSeed: () => level.seed,
-
     setSeed: (seed: number) => {
       floors.restartFromSeed(seed);
       camera.setTarget(floors.getPlayer()!);
-      return `Run restarted from seed ${seed}. The same seed always builds the same floor.`;
+      return `Run restarted from seed ${seed}.`;
     },
-
-    setTimer: (seconds: number) => {
-      timer.setTime(seconds);
-      return `Global timer set to ${seconds} seconds.`;
+    setTimer: (s: number) => {
+      timer.setTime(s);
+      return `Global timer set to ${s} seconds.`;
     },
-
     toggleMenu: () => {
       gameLoop.isMenuOpen = !gameLoop.isMenuOpen;
       return gameLoop.isMenuOpen
         ? 'Menu open. Simulation paused.'
         : 'Menu closed. Simulation resumed.';
     },
-
-    getFloorStats: () => {
-      let floorTiles = 0;
-      for (let y = 0; y < level.grid.height; y++) {
-        for (let x = 0; x < level.grid.width; x++) {
-          if (level.grid.get(x, y) === TileType.FLOOR) floorTiles++;
-        }
-      }
-
-      const spawn = level.spawnPoint;
-      const exit = level.findFarthestFloor(spawn.x, spawn.y);
-      const distance = Math.hypot(exit.x - spawn.x, exit.y - spawn.y);
-
-      return {
-        depth: floors.currentDepth,
-        seed: level.seed,
-        floorTiles,
-        gridTiles: level.grid.width * level.grid.height,
-        worldWidthPx: level.grid.width * level.tileSize,
-        worldHeightPx: level.grid.height * level.tileSize,
-        stairsDistancePx: Math.round(distance),
-        stairsSecondsAway: Math.round(distance / (floors.getPlayer()?.speed ?? 1)),
-      };
+    getZoom: () => camera.getZoom(),
+    setZoom: (z: number) => {
+      camera.setZoom(z);
+      return `Camera zoom set to ${z}x.`;
     },
+    damagePlayer: (amount: number) => {
+      const p = floors.getPlayer();
+      if (!p) return 'No player on floor.';
+      const taken = p.takeDamage(amount);
+      return `Dealt ${taken} damage. Player HP: ${p.health}/${p.maxHealth}.`;
+    },
+    playerAttack: (tx?: number, ty?: number) => {
+      const p = floors.getPlayer();
+      if (!p) return 'No player on floor.';
+      const res = p.attackAt(tx ?? p.x + 30, ty ?? p.y);
+      return `Attacked with ${p.weapon.name} (${res.type}). Hits: ${res.hits ?? (res.projectile ? 1 : 0)}.`;
+    },
+    equipWeapon: (id: string) => {
+      const p = floors.getPlayer();
+      if (!p) return 'No player on floor.';
+      p.equipWeapon(id as any);
+      return `Equipped ${p.weapon.name} (${p.weapon.type}).`;
+    },
+    spawnLoot: (lvl = floors.currentDepth, rarity?: string) => {
+      const item = itemGen.generateItem({ level: lvl, rarity: rarity as any });
+      console.log(item.toStatBlock());
+      return `Spawned ${item.name} (${item.rarity.toUpperCase()}, Lv. ${item.level}).`;
+    },
+    getFloorStats: () => floors.getFloorStats(),
   };
 
   console.log(
-    'Dungeon Crawler Engine initialized. Use WASD or arrow keys to move, E to use the staircase.',
+    'Dungeon Crawler initialized. WASD to move, Space/Click to attack, Q to switch weapon, E for stairs.',
   );
 }
 
-// Full-bleed canvas.
 document.body.style.margin = '0';
 document.body.style.overflow = 'hidden';
-
 bootstrap().catch(console.error);

@@ -3,5 +3,7 @@
   "moveDown": ["s", "arrowdown"],
   "moveLeft": ["a", "arrowleft"],
   "moveRight": ["d", "arrowright"],
-  "interact": ["e"]
+  "interact": ["e"],
+  "attack": [" ", "mouse0"],
+  "switchWeapon": ["q"]
 }

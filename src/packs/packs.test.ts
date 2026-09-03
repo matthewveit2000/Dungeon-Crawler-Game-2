@@ -4,6 +4,10 @@ import player from './Player.json';
 import interactables from './Interactables.json';
 import controls from './Controls.json';
 import debug from './Debug.json';
+import art from './Art.json';
+import enemies from './Enemies.json';
+import weapons from './Weapons.json';
+import items from './Items.json';
 
 /**
  * Guards the contracts documented in .docs/ART_GUIDE.md and
@@ -95,6 +99,87 @@ describe('Tier 3 packs', () => {
     it('describes the test marker', () => {
       expect(debug.testSquare.width).toBeGreaterThan(0);
       expect(debug.testSquare.spinRate).toBeGreaterThan(0);
+    });
+  });
+
+  describe('art', () => {
+    it('defines tile and entity sprites in the art pack', () => {
+      expect(art.tiles).toBeDefined();
+      expect(art.entities).toBeDefined();
+      expect(art.tiles.floor).toBeDefined();
+      expect(art.tiles.wall).toBeDefined();
+      expect(art.entities.player).toBeDefined();
+      expect(art.entities.staircase).toBeDefined();
+    });
+
+    it('resolves player sprite from the art pack', () => {
+      expect(player.sprite).toBeDefined();
+      expect(art.entities[player.sprite as keyof typeof art.entities]).toBeDefined();
+    });
+
+    it('resolves staircase sprite from the art pack', () => {
+      expect(interactables.staircase.sprite).toBeDefined();
+      expect(
+        art.entities[interactables.staircase.sprite as keyof typeof art.entities],
+      ).toBeDefined();
+    });
+
+    it('resolves world tile sprites from the art pack', () => {
+      expect(world.sprites).toBeDefined();
+      expect(art.tiles[world.sprites.floor as keyof typeof art.tiles]).toBeDefined();
+      expect(art.tiles[world.sprites.wall as keyof typeof art.tiles]).toBeDefined();
+    });
+
+    it('resolves player animation frames from the art pack', () => {
+      expect(player.animations).toBeDefined();
+      expect(player.animations.idle).toBeDefined();
+      expect(player.animations.walk).toBeDefined();
+      expect(player.animations.idle.fps).toBeGreaterThan(0);
+      expect(player.animations.walk.fps).toBeGreaterThan(0);
+
+      for (const frame of player.animations.idle.frames) {
+        expect(art.entities[frame as keyof typeof art.entities]).toBeDefined();
+      }
+      for (const frame of player.animations.walk.frames) {
+        expect(art.entities[frame as keyof typeof art.entities]).toBeDefined();
+      }
+    });
+
+    it('resolves all enemy sprites from the art pack', () => {
+      for (const def of Object.values(enemies.types)) {
+        expect(def.sprite).toBeDefined();
+        expect(art.entities[def.sprite as keyof typeof art.entities]).toBeDefined();
+      }
+    });
+
+    it('declares valid weapon definitions with positive damages and cooldowns', () => {
+      expect(weapons.defaultWeapon).toBeDefined();
+      expect(weapons.weapons[weapons.defaultWeapon as keyof typeof weapons.weapons]).toBeDefined();
+
+      for (const def of Object.values(weapons.weapons)) {
+        expect(def.name).toBeDefined();
+        expect(def.damage).toBeGreaterThan(0);
+        expect(def.cooldown).toBeGreaterThan(0);
+        expect(['melee', 'ranged']).toContain(def.type);
+      }
+    });
+
+    it('declares valid item rarities and base equipment templates', () => {
+      expect(items.levelScalingFactor).toBeGreaterThan(0);
+      expect(Object.keys(items.rarities).length).toBeGreaterThanOrEqual(4);
+
+      for (const rarity of Object.values(items.rarities)) {
+        expect(rarity.name).toBeDefined();
+        expect(rarity.multiplier).toBeGreaterThanOrEqual(1.0);
+        expect(rarity.weight).toBeGreaterThan(0);
+      }
+
+      for (const base of Object.values(items.bases)) {
+        expect(base.id).toBeDefined();
+        expect(base.name).toBeDefined();
+        expect(['weapon', 'armor']).toContain(base.slot);
+        expect(base.baseStats).toBeDefined();
+      }
     });
   });
 });

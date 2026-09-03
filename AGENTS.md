@@ -35,6 +35,7 @@ Because the PM is non-technical, your communication style in Pull Requests (PRs)
 - **Push-Back Authority:** You must actively push back against PM requests if they violate core architectural principles. If a PM asks for a specific enemy to be hardcoded into the map logic, you must refuse, explain that this violates the zero-hardcoding rule, and implement the feature correctly through the Tier 3 data packs.
 - **Maintain Documentation:** Whenever you or the PM make a decision that affects the project's architecture, technical approach, gameplay rules, roadmap, PM/AI responsibilities, or communication process, update the relevant project documentation in the same PR where the decision is made. Documentation must remain synchronized with the current implementation and decisions. Do not allow code, the roadmap, or project rules to become inconsistent with the documentation.
 - **Continuous & Verbose AI Updates:** Whenever an AI tool is executing tasks or doing work on this repository, it MUST be verbose and provide continuous updates to the user (e.g., using a messaging mechanism) to explain what it is currently working on. It must not remain silent for long stretches of time during a session.
+- **Autonomous Dev Server & Review Link:** Whenever a phase, feature, or review milestone is reached and presented to the PM for review, the AI MUST automatically launch the development server (`npm run dev`) in the background and provide the clickable review link (`http://localhost:5173/`) directly in the review response so the non-technical PM never has to run command-line commands manually.
 
 ## 4. Strict Architectural Rules
 
@@ -62,7 +63,7 @@ Every single PR you submit must contain three distinct elements:
 
 1. **Plain-English Summary:** A non-technical explanation of the feature.
 2. **Test Verification:** Console output proving the newly written tests passed.
-3. **The Effortless Audit Toolkit:** The PM must manually verify every feature. You must provide exact, step-by-step instructions for the PM to trigger the new logic instantly. Provide console commands (e.g., window.audit.spawnLegendaryLoot()), test map coordinates, or temporary UI buttons to facilitate this. Every PR must result in a playable end-state.
+3. **The Effortless Audit Toolkit:** The PM must manually verify every feature. You must provide exact, step-by-step instructions for the PM to trigger the new logic instantly. Provide console commands (e.g., window.audit.spawnLegendaryLoot()), test map coordinates, or temporary UI buttons to facilitate this. Every PR must result in a playable end-state. **The AI must always start the development server (`npm run dev`) in the background and provide the clickable local link (`http://localhost:5173/`) in the audit instructions.**
 
 ### Definition of Done
 

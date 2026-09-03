@@ -142,69 +142,69 @@ Whether that is the right shape for the game is a PM decision, not a technical o
 
 *Inserted after the art resolution was settled, and retargeted to 32 x 32 in Phase 11.7. These phases must complete before Epic 5, because the moment enemies exist they will need sprites, and every entity built before the pipeline exists is one that has to be retrofitted afterwards. Specification: `.docs/ART_GUIDE.md`.*
 
-- **Phase 16: Pixel-Perfect Rendering Foundation**
+- **Phase 16: Pixel-Perfect Rendering Foundation** *(complete)*
 
 * *Objective:* Make the renderer preserve authored pixels exactly. Sample textures nearest-neighbour rather than smoothing them, support a whole-number camera zoom applied from `defaultZoom` in `World.json`, and snap the camera position to whole pixels so the world does not shimmer as the player moves. No art is introduced in this phase; it prepares the surface that art will land on.
 * *Tier Impacted:* Tier 1 (Engine).
 * *TDD Criteria:* The camera pivot resolves to whole pixels at every zoom level and every fractional player position. A non-integer zoom is rejected. Texture sampling defaults to nearest-neighbour.
-* *Verification:* PM confirms the game opens at the default 2x zoom showing about 20 tiles across, runs window.audit.setZoom(4) and confirms the view doubles cleanly with no blurring, then walks around and confirms no shimmering or crawling along tile edges.
+* *Verification:* PM confirms the game opens at the default 2x zoom showing about 20 tiles across, runs window.audit.setZoom(4) and confirms the view doubles cleanly with no blurring, then walks around and confirms no shimmering or crawling along tile edges. See `.docs/milestones/phase-16.md`.
 
-- **Phase 17: Sprite Loading & the Tier 3 Art Pack**
+- **Phase 17: Sprite Loading & the Tier 3 Art Pack** *(complete)*
 
 * *Objective:* Load 32 x 32 sprites declared in Tier 3 and draw entities and tiles with them instead of flat coloured rectangles. Missing art must fall back to the current coloured placeholder with a console warning rather than crashing, per the Graceful Failure rule.
 * *Tier Impacted:* Tier 1 & Tier 3.
 * *TDD Criteria:* An entity resolves its art from a Tier 3 declaration; a declaration pointing at missing art yields a placeholder and a warning, not an exception. A sprite whose dimensions are not a whole multiple of the tile size is rejected at load.
-* *Verification:* PM sees drawn tiles and a drawn character in place of coloured squares, and window.audit.spawnTestSquare() still works.
+* *Verification:* PM sees drawn tiles and a drawn character in place of coloured squares, and window.audit.spawnTestSquare() still works. See `.docs/milestones/phase-17.md`.
 
-- **Phase 18: Sprite Animation**
+- **Phase 18: Sprite Animation** *(complete)*
 
 * *Objective:* Play frame sequences (idle, walk, and later attack) declared in Tier 3, advanced by the fixed-timestep loop so playback is identical on any machine.
 * *Tier Impacted:* Tier 1 & Tier 3.
 * *TDD Criteria:* An animation advances by a deterministic number of frames per fixed step; the same elapsed time always produces the same frame regardless of how it was divided into updates.
-* *Verification:* PM watches the character animate while walking and rest on an idle frame when stopped.
+* *Verification:* PM watches the character animate while walking and rest on an idle frame when stopped. See `.docs/milestones/phase-18.md`.
 
-- **Phase 19: EPIC 4.5 Art Pipeline Checkpoint**
+- **Phase 19: EPIC 4.5 Art Pipeline Checkpoint** *(complete)*
 
-* *Objective:* Confirm the pipeline holds before combat multiplies the asset count. Verify no non-integer scaling anywhere in the render path, measure texture memory across floor descents, and confirm the placeholder fallback still works for every entity type.
+* *Objective:* Confirm the pipeline holds before combat multiplies the asset count. Verify no non-integer scaling anywhere in the render path, measure texture memory across floor descents, and confirm the placeholder fallback still works for every entity type. See `.docs/milestones/phase-19.md`.
 
 ## EPIC 5: Combat Systems & Entity AI
 
-- **Phase 20: Health, Damage, & Stats Framework**
+- **Phase 20: Health, Damage, & Stats Framework** *(complete)*
 
 * *Objective:* Implement base stats and a unified damage application method for all entities.
 * *Tier Impacted:* Tier 2 (Modules).
 * *TDD Criteria:* Damage application accurately reduces Health; dropping below zero triggers entity destruction.
-* *Verification:* PM runs window.audit.damagePlayer(10) and sees health decrease on UI.
+* *Verification:* PM runs window.audit.damagePlayer(10) and sees health decrease on UI. See `.docs/milestones/phase-20.md`.
 
-- **Phase 21: Standard Enemy Definitions & Spawning**
+- **Phase 21: Standard Enemy Definitions & Spawning** *(complete)*
 
 * *Objective:* Define standard enemies using JSON in Tier 3 (Packs) and implement dynamic spawning across the floor based on density rules.
 * *Tier Impacted:* Tier 2 & Tier 3.
 * *TDD Criteria:* Spawner reads Tier 3 JSON and instantiates entities with correct stats.
-* *Verification:* PM explores the map and observes standard enemy sprites.
+* *Verification:* PM explores the map and observes standard enemy sprites. See `.docs/milestones/phase-21.md`.
 
-- **Phase 22: Enemy Aggro Radius & Pathfinding**
+- **Phase 22: Enemy Aggro Radius & Pathfinding** *(complete)*
 
 * *Objective:* Enemies detect the player within a set radius and move toward them.
 * *Tier Impacted:* Tier 2 (Modules).
 * *TDD Criteria:* State machine shifts from IDLE to AGGRO when player enters radius.
-* *Verification:* PM steps near an enemy and verifies they are chased.
+* *Verification:* PM steps near an enemy and verifies they are chased. See `.docs/milestones/phase-22.md`.
 
-- **Phase 23: Player Combat Mechanics (Melee & Ranged)**
+- **Phase 23: Player Combat Mechanics (Melee & Ranged) - COMPLETED**
 
 * *Objective:* Allow the player to attack using predefined weapon archetypes, spawning hitboxes or projectiles.
 * *Tier Impacted:* Tier 2 (Modules).
 * *TDD Criteria:* Attack hitboxes intersecting with enemy hurtboxes successfully dispatch damage events.
-* *Verification:* PM clicks to attack and kills a pursuing enemy.
+* *Verification:* PM clicks to attack and kills a pursuing enemy. See `.docs/milestones/phase-23.md`.
 
 ## EPIC 6: Loot Generation & Economy Math
 
-- **Phase 24: Item Generation & Rarity Multipliers**
+- **Phase 24: Item Generation & Rarity Multipliers - COMPLETED**
 
 * *Objective:* Build the Tier 2 item generator. Implement ARPG multiplicative scaling math based on item level and rarity (e.g., Legendary = 3x base stats).
 * *Tier Impacted:* Tier 2 & Tier 3.
 * *TDD Criteria:* A Level 5 Legendary item outputs strictly higher mathematical stats than a Level 1 Common item according to the formulas.
-* *Verification:* PM runs window.audit.spawnLoot() and evaluates the printed stat blocks.
+* *Verification:* PM runs window.audit.spawnLoot() and evaluates the printed stat blocks. See `.docs/milestones/phase-24.md`.
 
 - **Phase 25: Affix Generator**
 

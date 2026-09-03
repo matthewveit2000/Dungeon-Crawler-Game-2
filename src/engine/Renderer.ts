@@ -1,4 +1,7 @@
-import { Application, Container } from 'pixi.js';
+import { Application, Container, TextureStyle } from 'pixi.js';
+
+// Ensure all textures default to nearest-neighbour sampling for crisp pixel art.
+TextureStyle.defaultOptions.scaleMode = 'nearest';
 
 export interface RendererOptions {
   /** Stage background colour as a 24-bit RGB integer. */

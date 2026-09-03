@@ -80,7 +80,8 @@ describe('Phase 19: Art Pipeline Checkpoint', () => {
 
       expect(renderCount).toBe(11);
       // Ensure entity display objects stay strictly bounded without leaks
-      expect(world.children.length).toBe(2 + floorManager.getEnemies().length);
+      const baseCount = floorManager.getVendor() ? 3 : 2;
+      expect(world.children.length).toBe(baseCount + floorManager.getEnemies().length);
       expect(world.children.length).toBeLessThanOrEqual(12);
     });
 

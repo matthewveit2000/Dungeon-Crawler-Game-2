@@ -1,5 +1,6 @@
 import { Rng } from '../engine/Rng';
 import { Item, ItemRarity, ItemSlot, ItemStats } from './Item';
+import { AffixGenerator } from './AffixGenerator';
 import itemsPack from '../packs/Items.json';
 
 export interface GenerateItemOptions {
@@ -28,9 +29,11 @@ interface BaseItemDef {
  */
 export class ItemGenerator {
   private readonly rng: Rng;
+  private readonly affixGen: AffixGenerator;
 
   constructor(rng: Rng = Rng.random()) {
     this.rng = rng;
+    this.affixGen = new AffixGenerator(this.rng);
   }
 
   public generateItem(options: GenerateItemOptions = {}): Item {
@@ -41,7 +44,7 @@ export class ItemGenerator {
     // Select base item
     const base = this.selectBase(options.baseId, options.slot);
 
-    // Compute scaled stats
+    // Compute scaled base stats
     const stats: ItemStats = {};
     const levelFactor = 1 + (level - 1) * itemsPack.levelScalingFactor;
     const rarityMultiplier = rarityDef.multiplier;
@@ -56,6 +59,9 @@ export class ItemGenerator {
       stats.healthBonus = Math.floor(base.baseStats.healthBonus * levelFactor * rarityMultiplier);
     }
 
+    // Generate affixes for this rarity tier
+    const affixes = this.affixGen.generateAffixes(rarity);
+
     const id = `item-${this.rng.next()}-${Date.now()}`;
     const name = `${rarityDef.name} ${base.name}`;
 
@@ -68,6 +74,7 @@ export class ItemGenerator {
       level,
       stats,
       color: rarityDef.color,
+      affixes,
     });
   }
 
@@ -99,7 +106,7 @@ export class ItemGenerator {
       return Object.values(bases)[0];
     }
 
-    const index = Math.floor(this.rng.next() * eligible.length);
-    return eligible[Math.min(index, eligible.length - 1)];
+    const choice = eligible[this.rng.nextInt(eligible.length)];
+    return choice;
   }
 }

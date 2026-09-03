@@ -5,6 +5,9 @@ import { Level } from './Level';
 import { resolveMovement } from './Movement';
 import { Weapon, WeaponId, AttackResult } from './Weapon';
 import { Projectile } from './Projectile';
+import { Item } from './Item';
+import { Inventory } from './Inventory';
+import { ProgressionManager, LevelUpResult } from './Progression';
 import playerPack from '../packs/Player.json';
 import controls from '../packs/Controls.json';
 import world from '../packs/World.json';
@@ -32,9 +35,37 @@ const FALLBACK_TILE_SIZE = world.tileSize;
 export class Player extends Entity {
   public readonly speed: number;
   public weapon: Weapon;
+  public gold = 0;
+  public readonly inventoryManager = new Inventory();
+  public readonly progression = new ProgressionManager();
 
+  public get inventory(): Item[] {
+    return this.inventoryManager.items;
+  }
+
+  public get level(): number {
+    return this.progression.level;
+  }
+
+  public get xp(): number {
+    return this.progression.currentXP;
+  }
+
+  public get xpToNextLevel(): number {
+    return this.progression.xpToNextLevel;
+  }
+
+  public get attributePoints(): number {
+    return this.progression.attributePoints;
+  }
+
+  public get skillPoints(): number {
+    return this.progression.skillPoints;
+  }
+
+  private readonly baseMaxHealth: number;
   private readonly inputManager: InputManager;
-  private readonly level?: Level;
+  private readonly levelModule?: Level;
   private readonly interactRadius: number;
   private readonly maxStep: number;
 
@@ -67,11 +98,12 @@ export class Player extends Entity {
       defaultAnimation: 'idle',
     });
 
-    this.maxHealth = options.maxHealth ?? playerPack.maxHealth ?? 100;
+    this.baseMaxHealth = options.maxHealth ?? playerPack.maxHealth ?? 100;
+    this.maxHealth = this.baseMaxHealth;
     this.health = options.health ?? this.maxHealth;
 
     this.inputManager = inputManager;
-    this.level = options.level;
+    this.levelModule = options.level;
     this.speed = options.speed ?? playerPack.speed;
     this.interactRadius = playerPack.interactRadius;
     this.weapon = new Weapon(options.weaponId ?? 'sword');
@@ -83,6 +115,39 @@ export class Player extends Entity {
 
   public equipWeapon(id: WeaponId): void {
     this.weapon = new Weapon(id);
+  }
+
+  public addToInventory(item: Item): void {
+    this.inventoryManager.addItem(item);
+  }
+
+  public refreshEquippedStats(): void {
+    const bonus = this.inventoryManager.getEffectiveBonusStats();
+    const progBonus = this.progression.getBonusStats();
+    this.maxHealth = this.baseMaxHealth + bonus.bonusHealth + progBonus.bonusHealth;
+    this.health = Math.min(this.health, this.maxHealth);
+  }
+
+  public heal(amount: number): number {
+    const healed = Math.min(amount, this.maxHealth - this.health);
+    this.health += healed;
+    return healed;
+  }
+
+  public addXP(amount: number): LevelUpResult {
+    const result = this.progression.addXP(amount);
+    if (result.leveledUp) {
+      this.refreshEquippedStats();
+    }
+    return result;
+  }
+
+  public override takeDamage(amount: number): number {
+    const defense =
+      this.inventoryManager.getEffectiveBonusStats().bonusDefense +
+      this.progression.getBonusStats().bonusDefense;
+    const effective = Math.max(1, amount - defense);
+    return super.takeDamage(effective);
   }
 
   public setEnemyTargets(targets: Entity[]): void {
@@ -106,10 +171,14 @@ export class Player extends Entity {
   }
 
   public attackAt(targetX: number, targetY: number): AttackResult {
+    const bonusDamage =
+      this.inventoryManager.getEffectiveBonusStats().bonusDamage +
+      this.progression.getBonusStats().bonusDamage;
     return this.weapon.attack(this.x, this.y, targetX, targetY, {
       targets: this.enemyTargets,
-      level: this.level,
+      level: this.levelModule,
       ownerId: this.id,
+      bonusDamage,
       onSpawnProjectile: this.onSpawnProjectile,
     });
   }
@@ -187,13 +256,13 @@ export class Player extends Entity {
       y: (dy / length) * this.speed * dt,
     };
 
-    if (!this.level) {
+    if (!this.levelModule) {
       this.x += delta.x;
       this.y += delta.y;
       return;
     }
 
-    const level = this.level;
+    const level = this.levelModule;
     const next = resolveMovement(
       (x, y, width, height) => level.isCollidingWithWall(x, y, width, height),
       {

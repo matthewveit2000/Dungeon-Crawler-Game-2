@@ -22,11 +22,11 @@ export interface EnemyOptions {
 export class Enemy extends Entity {
   public readonly enemyType: EnemyType;
   public readonly speed: number;
-  public readonly damage: number;
+  public damage: number;
   public readonly aggroRadius: number;
   public readonly maxStep: number;
 
-  public state: 'IDLE' | 'AGGRO' = 'IDLE';
+  public state: 'IDLE' | 'AGGRO' | 'FLEE' | 'NEUTRAL' = 'IDLE';
 
   private target?: Entity;
   private readonly level?: Level;
@@ -70,11 +70,41 @@ export class Enemy extends Entity {
       const dy = this.target.y - this.y;
       const dist = Math.hypot(dx, dy);
 
-      if (dist <= this.aggroRadius) {
+      const targetInSafeZone = this.level?.isSafeZone(this.target.x, this.target.y) ?? false;
+      const selfInSafeZone = this.level?.isSafeZone(this.x, this.y) ?? false;
+
+      if (targetInSafeZone || selfInSafeZone) {
+        this.state = 'FLEE';
+      } else if (dist <= this.aggroRadius) {
         this.state = 'AGGRO';
       }
 
-      if (this.state === 'AGGRO') {
+      if (this.state === 'FLEE') {
+        const fleeX = -dx;
+        const fleeY = -dy;
+        const fleeDist = Math.hypot(fleeX, fleeY);
+        if (fleeDist > 0.001) {
+          const moveX = (fleeX / fleeDist) * this.speed * dt;
+          const moveY = (fleeY / fleeDist) * this.speed * dt;
+          if (this.level) {
+            const next = resolveMovement(
+              (x, y, w, h) => this.level!.isCollidingWithWall(x, y, w, h),
+              {
+                from: { x: this.x, y: this.y },
+                delta: { x: moveX, y: moveY },
+                width: this.width,
+                height: this.height,
+                maxStep: this.maxStep,
+              },
+            );
+            this.x = next.x;
+            this.y = next.y;
+          } else {
+            this.x += moveX;
+            this.y += moveY;
+          }
+        }
+      } else if (this.state === 'AGGRO') {
         const stopDistance = Math.max(4, (this.width + this.target.width) / 4);
         if (dist > stopDistance) {
           let destX = this.target.x;

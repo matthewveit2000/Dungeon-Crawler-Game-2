@@ -206,96 +206,99 @@ Whether that is the right shape for the game is a PM decision, not a technical o
 * *TDD Criteria:* A Level 5 Legendary item outputs strictly higher mathematical stats than a Level 1 Common item according to the formulas.
 * *Verification:* PM runs window.audit.spawnLoot() and evaluates the printed stat blocks. See `.docs/milestones/phase-24.md`.
 
-- **Phase 25: Affix Generator**
+- **Phase 25: Affix Generator - COMPLETED**
 
 * *Objective:* Apply chaotic game-changing effects to items based strictly on rarity tier (Common = 0, Rare = 2, Legendary = 4).
 * *Tier Impacted:* Tier 2 & Tier 3.
 * *TDD Criteria:* Generator enforces exact affix counts based on the rarity enum.
-* *Verification:* PM generates a Legendary item and verifies it has exactly 4 affixes.
+* *Verification:* PM generates a Legendary item and verifies it has exactly 4 affixes. See `.docs/milestones/phase-25.md`.
 
-- **Phase 26: Dropping & Looting Logic**
+- **Phase 26: Dropping & Looting Logic - COMPLETED**
 
 * *Objective:* Enemies drop loot upon death. Players can walk over items to pick them up.
 * *Tier Impacted:* Tier 2 (Modules).
 * *TDD Criteria:* Collision with a loot entity removes it from the world array and pushes it to the player inventory array.
-* *Verification:* PM kills an enemy, sees the item sprite, and walks over it to collect it.
+* *Verification:* PM kills an enemy, sees the item sprite, and walks over it to collect it. See `.docs/milestones/phase-26.md`.
 
-- **Phase 27: Inventory Menu & Equipping**
+- **Phase 27: Inventory Menu & Equipping - COMPLETED**
 
 * *Objective:* Build the UI to equip loot. Ensure opening the menu pauses the global timer.
 * *Tier Impacted:* UI & Tier 2.
 * *TDD Criteria:* Equipping an item successfully modifies the player's base combat stats.
-* *Verification:* PM opens inventory, equips a sword, and deals increased damage to enemies.
+* *Verification:* PM opens inventory, equips a sword, and deals increased damage to enemies. See `.docs/milestones/phase-27.md`.
 
 ## EPIC 7: Safe Zones (Cities)
 
-- **Phase 28: City Prefab Injection**
+- **Phase 28: City Prefab Injection - COMPLETED**
 
 * *Objective:* Modify the map generator to occasionally carve out a predefined "Safe Zone" room.
 * *Tier Impacted:* Tier 2 & Tier 3.
 * *TDD Criteria:* City tiles are successfully flagged in the data grid as IS_SAFE_ZONE.
-* *Verification:* PM uses window.audit.teleportToCity() to verify the visual room layout.
+* *Verification:* PM uses window.audit.teleportToCity() to verify the visual room layout. See `.docs/milestones/phase-28.md`.
 
-- **Phase 29: City De-Aggro AI Directives**
+- **Phase 29: City De-Aggro AI Directives - COMPLETED**
 
 * *Objective:* When the player's coordinate is inside a safe zone, all enemies must instantly drop aggro and flee.
 * *Tier Impacted:* Tier 2 (Modules).
 * *TDD Criteria:* Player intersecting safe zone tile forces all active enemy states to FLEE.
-* *Verification:* PM aggros an enemy outside the city, runs inside, and verifies the enemy retreats.
+* *Verification:* PM aggros an enemy outside the city, runs inside, and verifies the enemy retreats. See `.docs/milestones/phase-29.md`.
 
-- **Phase 30: Economy & Vendor NPCs**
+- **Phase 30: Economy & Vendor NPCs - COMPLETED**
 
 * *Objective:* Introduce currency drops and a vendor inside the city allowing the player to buy/sell items.
 * *Tier Impacted:* Tier 2 (Modules).
 * *TDD Criteria:* Buying an item deducts the exact currency amount; transaction fails if funds are insufficient.
-* *Verification:* PM sells loot to the vendor and buys a health potion.
+* *Verification:* PM sells loot to the vendor and buys a health potion. See `.docs/milestones/phase-30.md`.
 
 ## EPIC 8: Boss Encounters & Arena Logic
 
-- **Phase 31: Boss Arena Generation**
+- **Phase 31: Boss Arena Generation - COMPLETED**
 
 * *Objective:* Inject a locked boss room prefab containing a demo boss and an attached treasure room.
 * *Tier Impacted:* Tier 2 & Tier 3.
 * *TDD Criteria:* Room generates with a distinct entryway and attached treasure room boundaries.
-* *Verification:* PM uses window.audit.teleportToBoss().
+* *Verification:* PM uses window.audit.teleportToBoss(). See `.docs/milestones/phase-31.md`.
 
-- **Phase 32: Spatial Door Locking & Neutral State**
+- **Phase 32: Spatial Door Locking & Neutral State - COMPLETED**
 
 * *Objective:* The Boss remains entirely neutral until the player steps inside. Entering the room instantly converts the door tiles to impassable walls.
 * *Tier Impacted:* Tier 2 (Modules).
 * *TDD Criteria:* Player intersecting the threshold triggers tile mutation and shifts Boss to AGGRO.
-* *Verification:* PM walks into the room, is physically trapped by new walls, and the boss attacks.
+* *Verification:* PM walks into the room, is physically trapped by new walls, and the boss attacks. See `.docs/milestones/phase-32.md`.
 
-- **Phase 33: Defeat Triggers & Treasure Rewards**
+- **Phase 33: Defeat Triggers & Treasure Rewards - COMPLETED**
 
 * *Objective:* Killing the boss destroys the wall tiles blocking the treasure room, which contains highly weighted loot.
 * *Tier Impacted:* Tier 2 (Modules).
 * *TDD Criteria:* Boss HP hitting zero dispatches event to mutate treasure room door tiles to floor tiles.
-* *Verification:* PM kills the boss via window.audit.killTarget() and loots the adjoining room.
+* *Verification:* PM kills the boss via window.audit.killTarget() and loots the adjoining room. See `.docs/milestones/phase-33.md`.
 
 ## EPIC 9: Character Progression
 
-- **Phase 34: XP & Leveling Framework**
+- **Phase 34: XP & Leveling Framework - COMPLETED**
 
 * *Objective:* Enemies grant XP. Reaching mathematical thresholds increments the Player Level.
 * *Tier Impacted:* Tier 2 (Modules).
 * *TDD Criteria:* XP threshold formula calculates correctly; level increments upon XP exceeding threshold.
-* *Verification:* PM kills an enemy and observes the level/XP bar increase.
+* *Verification:* PM kills an enemy and observes the level/XP bar increase. See `.docs/milestones/phase-34.md`.
 
-- **Phase 35: Dual Point System**
+- **Phase 35: Dual Point System - COMPLETED**
 
 * *Objective:* Leveling up grants 1 Attribute Point and 1 Skill Point.
 * *Tier Impacted:* Tier 2 (Modules).
 * *TDD Criteria:* Level increment event accurately dispatches additions to both point pools.
-* *Verification:* Automated tests pass.
+* *Verification:* Automated tests pass. See `.docs/milestones/phase-35.md`.
 
-- **Phase 36: Attribute & Skill Allocation Menus**
+- **Phase 36: Attribute & Skill Allocation Menus - COMPLETED**
 
 * *Objective:* Build the UI allowing the player to spend Attribute points on base stats and Skill points on a structured node tree.
 * *Tier Impacted:* UI & Tier 2.
 * *TDD Criteria:* Spending points deducts total and permanently applies stat modifiers.
-* *Verification:* PM opens the menu, spends points, and validates increased stats.
+* *Verification:* PM opens the menu, spends points, and validates increased stats. See `.docs/milestones/phase-36.md`.
 
-- **Phase 37: Final Polish & Architectural Audit**
+- **Phase 37: Final Polish & Architectural Audit - COMPLETED**
 
 * *Objective:* AI conducts a comprehensive code review across all tiers to enforce strict adherence to specifications prior to version 1.0 release.
+* *Tier Impacted:* All Tiers.
+* *TDD Criteria:* Clean architectural checks, 100% test pass rate across all 37 phases, and visual screenshot verification.
+* *Verification:* Run `npm run verify` and visual audits. See `.docs/milestones/phase-37.md`.

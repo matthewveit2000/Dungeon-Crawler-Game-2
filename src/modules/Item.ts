@@ -7,6 +7,14 @@ export interface ItemStats {
   healthBonus?: number;
 }
 
+export interface Affix {
+  id: string;
+  name: string;
+  type: 'prefix' | 'suffix';
+  description: string;
+  stats?: ItemStats;
+}
+
 export interface ItemData {
   id: string;
   name: string;
@@ -16,12 +24,13 @@ export interface ItemData {
   level: number;
   stats: ItemStats;
   color: string;
+  affixes?: Affix[];
 }
 
 /**
  * Item — represents a discrete piece of equipment or loot in the dungeon.
  *
- * Tier 2. Holds calculated numerical stats, rarity tier, and display formatting.
+ * Tier 2. Holds calculated numerical stats, rarity tier, affixes, and display formatting.
  * Free of rendering framework code.
  */
 export class Item {
@@ -33,6 +42,7 @@ export class Item {
   public readonly level: number;
   public readonly stats: ItemStats;
   public readonly color: string;
+  public readonly affixes: Affix[];
 
   constructor(data: ItemData) {
     this.id = data.id;
@@ -43,6 +53,7 @@ export class Item {
     this.level = data.level;
     this.stats = { ...data.stats };
     this.color = data.color;
+    this.affixes = data.affixes ? [...data.affixes] : [];
   }
 
   /**
@@ -63,6 +74,13 @@ export class Item {
     }
     if (this.stats.healthBonus !== undefined) {
       lines.push(`  Max HP: +${this.stats.healthBonus}`);
+    }
+
+    if (this.affixes.length > 0) {
+      lines.push('  Affixes:');
+      for (const affix of this.affixes) {
+        lines.push(`   * ${affix.name}: ${affix.description}`);
+      }
     }
 
     return lines.join('\n');

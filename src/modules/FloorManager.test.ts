@@ -30,7 +30,10 @@ describe('FloorManager', () => {
 
     expect(context.floors.getPlayer()).toBe(player);
     expect(context.floors.getStaircase()).not.toBeNull();
-    expect(context.entityManager.getEntities().length).toBe(2 + context.floors.getEnemies().length);
+    const baseCount = context.floors.getVendor() ? 3 : 2;
+    expect(context.entityManager.getEntities().length).toBe(
+      baseCount + context.floors.getEnemies().length,
+    );
   });
 
   it('spawns the player on standable floor', () => {
@@ -87,8 +90,9 @@ describe('FloorManager', () => {
       // Leftovers used to survive every descent, so the floor was never wiped.
       expect(context.entityManager.getEntity('stray')).toBeUndefined();
       expect(stray.isDestroyed).toBe(true);
+      const baseCount = context.floors.getVendor() ? 3 : 2;
       expect(context.entityManager.getEntities().length).toBe(
-        2 + context.floors.getEnemies().length,
+        baseCount + context.floors.getEnemies().length,
       );
     });
 
@@ -98,9 +102,10 @@ describe('FloorManager', () => {
         context.floors.descend();
         context.floors.update();
       }
-      expect(context.stage.children.length).toBe(2 + context.floors.getEnemies().length);
+      const baseCount = context.floors.getVendor() ? 3 : 2;
+      expect(context.stage.children.length).toBe(baseCount + context.floors.getEnemies().length);
       expect(context.entityManager.getEntities().length).toBe(
-        2 + context.floors.getEnemies().length,
+        baseCount + context.floors.getEnemies().length,
       );
     });
 

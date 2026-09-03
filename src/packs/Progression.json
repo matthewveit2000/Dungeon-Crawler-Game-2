@@ -1,0 +1,41 @@
+{
+  "baseXP": 50,
+  "exponent": 1.5,
+  "enemyXP": {
+    "goblin": 25,
+    "skeleton": 35,
+    "rat": 15,
+    "boss": 250
+  },
+  "attributes": {
+    "strength": {
+      "name": "Strength",
+      "damagePerPoint": 2
+    },
+    "vitality": {
+      "name": "Vitality",
+      "healthPerPoint": 15
+    },
+    "agility": {
+      "name": "Agility",
+      "speedPerPoint": 5
+    }
+  },
+  "skills": {
+    "whirlwind": {
+      "name": "Whirlwind Strike",
+      "description": "Increases melee attack radius by 20%",
+      "maxRank": 3
+    },
+    "stoneSkin": {
+      "name": "Stone Skin",
+      "description": "Grants +5 passive flat defense",
+      "maxRank": 3
+    },
+    "swiftness": {
+      "name": "Swiftness",
+      "description": "Increases movement speed by 10%",
+      "maxRank": 3
+    }
+  }
+}

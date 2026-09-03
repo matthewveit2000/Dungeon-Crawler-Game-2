@@ -9,6 +9,7 @@ export interface AttackOptions {
   targets?: Entity[];
   level?: Level;
   ownerId?: string;
+  bonusDamage?: number;
   onSpawnProjectile?: (projectile: Projectile) => void;
 }
 
@@ -93,6 +94,8 @@ export class Weapon {
     const dirX = len > 0 ? dx / len : 1;
     const dirY = len > 0 ? dy / len : 0;
 
+    const totalDamage = this.damage + (options.bonusDamage ?? 0);
+
     if (this.type === 'melee') {
       const hx = originX + dirX * (this.range / 2);
       const hy = originY + dirY * (this.range / 2);
@@ -109,19 +112,19 @@ export class Weapon {
           const overlaps = Math.abs(hx - target.x) <= halfW && Math.abs(hy - target.y) <= halfH;
 
           if (overlaps) {
-            target.takeDamage(this.damage);
+            target.takeDamage(totalDamage);
             hits++;
           }
         }
       }
 
-      return { type: 'melee', damage: this.damage, hits };
+      return { type: 'melee', damage: totalDamage, hits };
     } else {
       const proj = new Projectile(`proj-${Date.now()}-${Math.floor(originX)}`, originX, originY, {
         dirX,
         dirY,
         speed: this.projectileSpeed,
-        damage: this.damage,
+        damage: totalDamage,
         maxRange: this.maxRange,
         size: this.projectileSize,
         level: options.level,
@@ -129,7 +132,7 @@ export class Weapon {
       });
 
       options.onSpawnProjectile?.(proj);
-      return { type: 'ranged', damage: this.damage, projectile: proj };
+      return { type: 'ranged', damage: totalDamage, projectile: proj };
     }
   }
 }

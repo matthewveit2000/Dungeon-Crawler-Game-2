@@ -8,6 +8,12 @@ import { Staircase } from './Staircase';
 import { Enemy } from './Enemy';
 import { EnemySpawner } from './EnemySpawner';
 import { Projectile } from './Projectile';
+import { LootDrop } from './LootDrop';
+import { Item } from './Item';
+import { ItemGenerator } from './ItemGenerator';
+import { Vendor } from './Vendor';
+import { Boss } from './Boss';
+import progressionPack from '../packs/Progression.json';
 
 const PLAYER_ID = 'player-1';
 const STAIRCASE_ID = 'staircase-1';
@@ -31,8 +37,12 @@ export class FloorManager {
   private player: Player | null = null;
   private staircase: Staircase | null = null;
   private enemies: Enemy[] = [];
+  private lootDrops: LootDrop[] = [];
+  private vendor: Vendor | null = null;
+  private boss: Boss | null = null;
   private depth = 1;
   private descendRequested = false;
+  private readonly itemGen: ItemGenerator;
 
   constructor(
     level: Level,
@@ -40,12 +50,14 @@ export class FloorManager {
     inputManager: InputManager,
     onFloorBuilt: (level: Level) => void,
     enemySpawner?: EnemySpawner,
+    itemGen?: ItemGenerator,
   ) {
     this.level = level;
     this.entityManager = entityManager;
     this.inputManager = inputManager;
     this.onFloorBuilt = onFloorBuilt;
     this.enemySpawner = enemySpawner ?? new EnemySpawner(new Rng(level.seed));
+    this.itemGen = itemGen ?? new ItemGenerator(new Rng(level.seed));
   }
 
   /** How many floors deep the run currently is, counting from one. */
@@ -64,6 +76,7 @@ export class FloorManager {
   /** Populates the current floor with a player and a staircase. */
   public build(): Player {
     this.entityManager.clear();
+    this.lootDrops = [];
 
     const spawn = this.level.spawnPoint;
     const player = new Player(PLAYER_ID, spawn.x, spawn.y, this.inputManager, {
@@ -95,8 +108,35 @@ export class FloorManager {
     this.player = player;
     this.staircase = staircase;
 
+    if (this.level.cityBounds) {
+      this.vendor = new Vendor(
+        'vendor-haven',
+        this.level.cityBounds.center.x,
+        this.level.cityBounds.center.y,
+        this.level.tileSize,
+      );
+      this.entityManager.addEntity(this.vendor);
+    }
+
+    if (this.level.bossArenaBounds) {
+      const arenaCenter = this.level.bossArenaBounds.arena.center;
+      const centerWorld = this.level.tileCenter(arenaCenter.x, arenaCenter.y);
+      this.boss = new Boss('boss-guardian', centerWorld.x, centerWorld.y, { level: this.level });
+      this.boss.setTarget(player);
+      this.entityManager.addEntity(this.boss);
+      this.enemies.push(this.boss);
+    }
+
     this.onFloorBuilt(this.level);
     return player;
+  }
+
+  public getVendor(): Vendor | null {
+    return this.vendor;
+  }
+
+  public getBoss(): Boss | null {
+    return this.boss;
   }
 
   public getEnemies(): Enemy[] {
@@ -122,6 +162,37 @@ export class FloorManager {
    * Applies a pending descent and manages projectile hits and defeated enemy cleanup.
    */
   public update(): void {
+    if (
+      this.boss &&
+      this.boss.isAlive &&
+      !this.level.isBossArenaLocked &&
+      this.player &&
+      this.level.isInsideBossArena(this.player.x, this.player.y)
+    ) {
+      this.level.lockBossArena();
+      this.boss.activateAggro();
+      this.onFloorBuilt(this.level);
+    }
+
+    if (this.boss && !this.boss.isAlive && !this.level.isTreasureRoomUnlocked) {
+      this.level.unlockTreasureRoom();
+      this.onFloorBuilt(this.level);
+      if (this.level.bossArenaBounds) {
+        const tr = this.level.bossArenaBounds.treasureRoom;
+        const trWorld = this.level.tileCenter(tr.center.x, tr.center.y);
+        const rareLoot = this.itemGen.generateItem({
+          rarity: 'rare',
+          level: this.currentDepth + 2,
+        });
+        const legLoot = this.itemGen.generateItem({
+          rarity: 'legendary',
+          level: this.currentDepth + 2,
+        });
+        this.spawnLootDrop(trWorld.x, trWorld.y, rareLoot);
+        this.spawnLootDrop(trWorld.x + 20, trWorld.y, legLoot);
+      }
+    }
+
     const entities = this.entityManager.getEntities();
     for (const entity of entities) {
       if (entity instanceof Projectile) {
@@ -138,7 +209,30 @@ export class FloorManager {
       if (!enemy.isAlive) {
         this.enemies.splice(i, 1);
         this.entityManager.removeEntity(enemy.id);
+        this.spawnLootDrop(enemy.x, enemy.y);
+        if (this.player) {
+          this.player.gold += 10;
+          const xpMap = progressionPack.enemyXP as Record<string, number>;
+          const xpAmount =
+            enemy instanceof Boss ? (xpMap.boss ?? 250) : (xpMap[enemy.enemyType] ?? 25);
+          this.player.addXP(xpAmount);
+        }
         enemy.destroy();
+      }
+    }
+
+    if (this.player) {
+      const pickupRadius = this.level.tileSize * 0.75;
+      for (let i = this.lootDrops.length - 1; i >= 0; i--) {
+        const drop = this.lootDrops[i];
+        const dist = Math.hypot(this.player.x - drop.x, this.player.y - drop.y);
+        if (dist <= pickupRadius) {
+          drop.collect();
+          this.player.addToInventory(drop.item);
+          this.lootDrops.splice(i, 1);
+          this.entityManager.removeEntity(drop.id);
+          drop.destroy();
+        }
       }
     }
 
@@ -154,6 +248,24 @@ export class FloorManager {
     this.depth++;
     this.level.regenerate();
     this.build();
+  }
+
+  public getLootDrops(): LootDrop[] {
+    return this.lootDrops;
+  }
+
+  public spawnLootDrop(x: number, y: number, item?: Item): LootDrop {
+    const droppedItem = item ?? this.itemGen.generateItem({ level: this.currentDepth });
+    const drop = new LootDrop(
+      `loot-drop-${Date.now()}-${this.lootDrops.length}`,
+      x,
+      y,
+      droppedItem,
+      { tileSize: this.level.tileSize },
+    );
+    this.lootDrops.push(drop);
+    this.entityManager.addEntity(drop);
+    return drop;
   }
 
   /** Restarts the run from a known seed. Used by the audit toolkit. */
